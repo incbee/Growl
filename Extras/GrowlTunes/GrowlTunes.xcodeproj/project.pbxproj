@@ -24,6 +24,7 @@
 		6A695F021476E76D002B0278 /* iTunes.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A695F011476E76D002B0278 /* iTunes.m */; };
 		6A89594F1447D46E009D09FC /* Growl.framework in Copy Framework */ = {isa = PBXBuildFile; fileRef = 6A8959301447D221009D09FC /* Growl.framework */; };
 		6A8959511447D61A009D09FC /* com.company.application.GNTPClientService.xpc in Copy XPCServices */ = {isa = PBXBuildFile; fileRef = 6A8959481447D221009D09FC /* com.company.application.GNTPClientService.xpc */; };
+		6A8EB4FE147A773C0075A826 /* growltunes-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6A9ED38C1447D04F002A0537 /* growltunes-Info.plist */; };
 		6A9ED38F1447D04F002A0537 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6A9ED38D1447D04F002A0537 /* InfoPlist.strings */; };
 		6A9ED3911447D04F002A0537 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A9ED3901447D04F002A0537 /* main.m */; };
 		6AADA30D1448AF570089AB08 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6AADA30B1448AF570089AB08 /* Localizable.strings */; };
@@ -552,6 +553,7 @@
 				6AADA3121448B43E0089AB08 /* GrowlTunes.icns in Resources */,
 				6AADA3131448B43E0089AB08 /* growlTunes.png in Resources */,
 				6AADA3361448C1F50089AB08 /* GrowlTunes.xib in Resources */,
+				6A8EB4FE147A773C0075A826 /* growltunes-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -34,5 +34,7 @@
 	<string>GrowlTunes</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>BuildMachineOSBuild</key>
+	<string>${MAC_OS_X_PRODUCT_BUILD_VERSION}</string>
 </dict>
 </plist>
