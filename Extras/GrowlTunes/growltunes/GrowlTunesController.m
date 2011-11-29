@@ -44,6 +44,14 @@ static int _LogLevel = LOG_LEVEL_ERROR;
     return _LogLevel;
 }
 
++ (void)initialize
+{
+    NSDictionary * defaults = 
+        [NSDictionary dictionaryWithContentsOfFile: 
+            [[NSBundle mainBundle] pathForResource:@"defaults" ofType:@"plist"]];
+	[[NSUserDefaults standardUserDefaults] registerDefaults: defaults];
+}
+
 - (NSString*)applicationNameForGrowl
 {
 	return @"GrowlTunes";
@@ -93,30 +101,22 @@ static int _LogLevel = LOG_LEVEL_ERROR;
 {
 #pragma unused(aNotification)
     
-    // TODO: all of this logic belongs in the conductor
-    $depends(@"dataChange", self.conductor, @"itemData", ^{
-        if (selff.conductor.playerState == StatePlaying) {
-            NSDictionary* itemData = selff.conductor.itemData;
-            
-            NSData* iconData = nil;
-            
-            if ([itemData valueForKey:@"hasArtwork"]) {
-                NSImage* iconImage = [itemData valueForKeyPath:@"artwork.image"];
-                iconData = [iconImage TIFFRepresentation];
-            }
-            
-            NSString* title = [itemData valueForKey:@"name"];
-            NSString* artist = [itemData valueForKey:@"artist"];
-            NSString* album = [itemData valueForKey:@"artist"];
-            NSString* time = [itemData valueForKey:@"time"];
-            NSString* description = [NSString stringWithFormat:@"%@ - %@\n%@", artist, album, time];
-            
-            [selff notifyWithTitle:title
-                      description:description
-                             name:NotifierChangedTracks
-                             icon:iconData];
-        }
-    });
+    $depends(@"GrowlNotificationTrigger",
+             self, @"conductor",
+             _iTunesConductor, @"currentTrack",
+             ^{
+                 if ([[ITunesApplication sharedInstance] playerState] != StatePlaying) {
+                     return;
+                 }
+                 
+                 NSDictionary* formatted = [[[selff conductor] currentTrack] formattedDescriptionDictionary];
+                 NSString* title = [formatted valueForKey:@"title"];
+                 NSString* description = [formatted valueForKey:@"description"];
+                 NSImage* icon = [formatted valueForKey:@"icon"];
+                 NSData* iconData = [icon TIFFRepresentation];
+                 
+                 [selff notifyWithTitle:title description:description name:NotifierChangedTracks icon:iconData];
+             });
     
 #ifdef DEBUG
     // load FScript if available for easy runtime introspection and debugging
@@ -174,6 +174,17 @@ static int _LogLevel = LOG_LEVEL_ERROR;
         [[NSStatusBar systemStatusBar] removeStatusItem:_statusItem];
         _statusItem = nil;
     }
+}
+
+- (IBAction)configureFormatting:(id)sender
+{
+#pragma unused(sender)
+    if (!_formatwc) {
+        _formatwc = [[NSWindowController alloc] initWithWindowNibName:@"FormattingPreferences"];
+    }
+    [NSApp activateIgnoringOtherApps:YES];
+    [_formatwc showWindow:self];
+    [[_formatwc window] makeKeyWindow];
 }
 
 - (IBAction)quitGrowlTunes:(id)sender
