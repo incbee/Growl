@@ -36,11 +36,16 @@
 @property(readonly, nonatomic, retain) id time;
 @property(readonly, nonatomic, retain) id videoKindName;
 
+@property(readonly, nonatomic, retain) NSString* persistentID;
+
+@property(readwrite, nonatomic, retain) NSNumber* rating;
+
 
 -(id)init;
 -(id)initWithPersistentID:(NSString*)persistentID;
 -(id)initWithTrackObject:(ITunesTrack*)track;
 -(void)evaluate;
+-(TrackMetadata*)evaluated;
 
 -(NSArray*)attributeKeys;
 
