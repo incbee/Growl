@@ -6,12 +6,11 @@
 //  Copyright (c) 2011 The Growl Project. All rights reserved.
 //
 
+#import <objc/runtime.h>
 #import "TrackMetadata.h"
 #import "iTunes+iTunesAdditions.h"
-#import "macros.h"
 #import "FormattingToken.h"
 #import "FormattingPreferencesHelper.h"
-#import <objc/runtime.h>
 
 
 @interface TrackMetadata ()
@@ -29,9 +28,6 @@
 @end
 
 
-static int _LogLevel = LOG_LEVEL_ERROR;
-
-
 @implementation TrackMetadata
 
 @synthesize trackObject = _trackObject;
@@ -41,29 +37,34 @@ static int _LogLevel = LOG_LEVEL_ERROR;
 
 static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
 
+static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
+
++ (int)ddLogLevel
+{
+    return ddLogLevel;
+}
+
++ (void)ddSetLogLevel:(int)logLevel
+{
+    ddLogLevel = logLevel;
+}
+
 +(void)initialize
 {
     if (self == [TrackMetadata class]) {
-        setLogLevel("TrackMetadata");
+        NSNumber *logLevel = [[NSUserDefaults standardUserDefaults] objectForKey:
+                              [NSString stringWithFormat:@"%@LogLevel", [self class]]];
+        if (logLevel)
+            ddLogLevel = [logLevel intValue];
         
         NSArray* props = [self propertiesForTrackClass:@"all"];
         for (NSString* prop in props) {
             BOOL success = class_addMethod(self, NSSelectorFromString(prop), (IMP)_propertyGetterFunc, "@@:");
             if (!success) {
-                LogErrorTag(@"KVC", @"Unable to add property accessor for: %@", prop);
+                LogErrorTag(LogTagKVC, @"Unable to add property accessor for: %@", prop);
             }
         }
     }
-}
-
-+ (void)setLogLevel:(int)level
-{
-    _LogLevel = level;
-}
-
-+ (int)logLevel
-{
-    return _LogLevel;
 }
 
 +(BOOL)accessInstanceVariablesDirectly
@@ -78,7 +79,7 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
 
 +(NSArray*)propertiesForTrackClass:(NSString*)className includingHelpers:(BOOL)withHelpers
 {
-    static __strong NSDictionary* propertiesByClassName;
+    static __STRONG NSDictionary* propertiesByClassName;
     
     if (!propertiesByClassName) {
         NSSet* itemSet              = $set(@"container", @"exists", @"index", @"name", @"persistentID");
@@ -138,9 +139,9 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
         trackSet                    = [trackSet setByAddingObjectsFromSet:trackAdditionsSet];
         
         NSSet* cdSet                = [trackSet setByAddingObjectsFromSet:$set(@"location")];
-        NSSet* deviceSet            = [trackSet copy];
+        NSSet* deviceSet            = AUTORELEASE([trackSet copy]);
         NSSet* fileSet              = [trackSet setByAddingObjectsFromSet:$set(@"location")];
-        NSSet* sharedSet            = [trackSet copy];
+        NSSet* sharedSet            = AUTORELEASE([trackSet copy]);
         NSSet* urlSet               = [trackSet setByAddingObjectsFromSet:$set(@"address")];
         
         propertiesByClassName = 
@@ -152,6 +153,7 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
                   @"ITunesSharedTrack", sharedSet,
                   @"ITunesURLTrack", urlSet,
                   @"all", [trackSet setByAddingObjectsFromSet:$set(@"location", @"address")]);
+        RETAIN(propertiesByClassName);
     }
     
     NSSet* props = [propertiesByClassName objectForKey:className];
@@ -172,7 +174,7 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
 
 -(id)init
 {
-    LogInfoTag(@"init", @"Initializing with lazy currentTrack object");
+    LogInfoTag(LogTagInit, @"Initializing with lazy currentTrack object");
     ITunesApplication* ita = [ITunesApplication sharedInstance];
     
     if (![ita isRunning]) {
@@ -186,7 +188,7 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
 
 -(id)initWithPersistentID:(NSString*)persistentID
 {
-    LogInfoTag(@"init", @"Initializing with persistent ID: %@", persistentID);
+    LogInfoTag(LogTagInit, @"Initializing with persistent ID: %@", persistentID);
     ITunesApplication* ita = [ITunesApplication sharedInstance];
     
     if (![ita isRunning]) {
@@ -216,11 +218,18 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
     NSString* specifier = [track performSelector:@selector(specifierDescription)];
     BOOL evaluated = !([specifier rangeOfString:@"currentTrack"].location != NSNotFound);
     
-    LogVerboseTag(@"init", @"track: %@ isEvaluated: %@", track, (evaluated ? @"YES" : @"NO"));
+    LogVerboseTag(LogTagInit, @"track: %@ isEvaluated: %@", track, (evaluated ? @"YES" : @"NO"));
     
     if (evaluated) [self evaluate];
         
     return self;
+}
+
+-(void)dealloc
+{
+    RELEASE(_cache);
+    RELEASE(_trackObject);
+    SUPER_DEALLOC;
 }
 
 #pragma mark evaluation
@@ -279,7 +288,7 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
         etrack.neverEvaluate = NO;
         [etrack evaluate];
     }
-    return etrack;
+    return AUTORELEASE(etrack);
 }
 
 #pragma mark KVC
@@ -287,20 +296,20 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd);
 static inline id _safeTrackPropertyGetter(TrackMetadata* self, NSString* key) {
     id value = nil;
     
-    LogVerboseTag(@"KVC", @"_safeTrackPropertyGetter for key: %@", key);
+    LogVerboseTag(LogTagKVC, @"_safeTrackPropertyGetter for key: %@", key);
     
     if (![[ITunesApplication sharedInstance] isRunning]) {
-        LogWarnTag(@"KVC", @"iTunes isn't running, unable to retrieve value: %@", key);
+        LogWarnTag(LogTagKVC, @"iTunes isn't running, unable to retrieve value: %@", key);
         return value;
     }
     
     if (![self.trackObject exists]) {
-        LogWarnTag(@"KVC", @"track object doesn't exist, unable to retrieve value: %@", key);
+        LogWarnTag(LogTagKVC, @"track object doesn't exist, unable to retrieve value: %@", key);
         return value;
     }
     
     value = [self.trackObject valueForKey:key];
-    LogVerboseTag(@"KVC", @"retrieved value: %@", key);
+    LogVerboseTag(LogTagKVC, @"retrieved value: %@", key);
     
     return value;
 }
@@ -308,15 +317,15 @@ static inline id _safeTrackPropertyGetter(TrackMetadata* self, NSString* key) {
 static inline id _cachingTrackPropertyGetter(TrackMetadata* self, NSString* key) {
     id value = nil;
     
-    LogVerboseTag(@"KVC", @"_cachingTrackPropertyGetter for key: %@", key);
+    LogVerboseTag(LogTagKVC, @"_cachingTrackPropertyGetter for key: %@", key);
     
     value = [self.cache valueForKey:key];
-    LogVerboseTag(@"KVC", @"cached value: %@", value);
+    LogVerboseTag(LogTagKVC, @"cached value: %@", value);
     
     if (!value) {
         value = _safeTrackPropertyGetter(self, key);
         if (value) {
-            LogVerboseTag(@"KVC", @"caching retrieved value");
+            LogVerboseTag(LogTagKVC, @"caching retrieved value");
             [self.cache setValue:value forKey:key];
         }
     }
@@ -326,10 +335,10 @@ static inline id _cachingTrackPropertyGetter(TrackMetadata* self, NSString* key)
 
 static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd) {    
     NSString* key = NSStringFromSelector(_cmd);    
-    LogVerboseTag(@"KVC", @"_propertyGetterFunc _cmd:%@", key);
+    LogVerboseTag(LogTagKVC, @"_propertyGetterFunc _cmd:%@", key);
     
     if (self.isEvaluated && ![key isEqualToString:@"exists"]) {
-        LogVerboseTag(@"KVC", @"is evaluated");
+        LogVerboseTag(LogTagKVC, @"is evaluated");
         return _cachingTrackPropertyGetter(self, key);
     }
     
@@ -340,7 +349,7 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd) {
 
 -(id)valueForUndefinedKey:(NSString *)key
 {
-    LogVerboseTag(@"KVC", @"valueForUndefinedKey: %@", key);
+    LogVerboseTag(LogTagKVC, @"valueForUndefinedKey: %@", key);
     return _propertyGetterFunc(self, NSSelectorFromString(key));
 }
 
@@ -470,7 +479,7 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd) {
 -(NSImage*)artworkImage
 {
     NSImage* image = self.trackObject.artworkImage;
-    LogImage(@"track art", image);
+    LogImage(image);
     return image;
 }
 
@@ -496,7 +505,7 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd) {
     }
     
     NSArray* attributes = $array(formattingAttributes);
-    FormattingPreferencesHelper* helper = [[FormattingPreferencesHelper alloc] init];
+    FormattingPreferencesHelper* helper = AUTORELEASE([[FormattingPreferencesHelper alloc] init]);
     
     NSMutableArray* descriptionArray = [NSMutableArray arrayWithCapacity:3];
     
@@ -531,11 +540,13 @@ static id _propertyGetterFunc(TrackMetadata* self, SEL _cmd) {
                                    stringByTrimmingCharactersInSet:toTrim];
     [dict setValue:descriptionString forKey:@"description"];
     
+    NSDictionary* immutableDict = AUTORELEASE([dict copy]);
+    
     if (_isEvaluated) {
-        [self.cache setValue:[dict copy] forKey:@"formattingDescriptionDictionary"];
+        [self.cache setValue:immutableDict forKey:@"formattingDescriptionDictionary"];
     }
     
-    return [dict copy];
+    return immutableDict;
 }
 
 -(NSString*)formattedTitle

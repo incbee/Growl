@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <ScriptingBridge/ScriptingBridge.h>
+#import "macros.h"
 #import "iTunes.h"
 #import "iTunes+iTunesAdditions.h"
 #import "TrackMetadata.h"
@@ -34,9 +35,6 @@
 @property(readonly, nonatomic, retain) TrackMetadata* currentTrack;
 
 @property(readwrite, nonatomic, retain) NSNumber* volume;
-
-+ (void)setLogLevel:(int)level;
-+ (int)logLevel;
 
 - (void)bootstrap;
 

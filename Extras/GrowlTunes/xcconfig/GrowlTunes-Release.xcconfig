@@ -1,2 +1,2 @@
-#include "Global-Release.xcconfig"
 #include "GrowlTunes.xcconfig"
+

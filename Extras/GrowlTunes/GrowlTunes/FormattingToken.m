@@ -7,7 +7,6 @@
 //
 
 #import "FormattingToken.h"
-#import "macros.h"
 
 
 @interface FormattingToken ()
@@ -20,9 +19,31 @@
 
 @synthesize isDynamic = _isDynamic;
 
+static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
+
++ (int)ddLogLevel
+{
+    return ddLogLevel;
+}
+
++ (void)ddSetLogLevel:(int)logLevel
+{
+    ddLogLevel = logLevel;
+}
+
++ (void)initialize
+{
+    if (self == [FormattingToken class]) {
+        NSNumber *logLevel = [[NSUserDefaults standardUserDefaults] objectForKey:
+                              [NSString stringWithFormat:@"%@LogLevel", [self class]]];
+        if (logLevel)
+            ddLogLevel = [logLevel intValue];
+    }
+}
+
 +(NSDictionary*)tokenMap
 {
-    static __strong NSDictionary* tokenMap;
+    static __STRONG NSDictionary* tokenMap;
     if (!tokenMap) {
         tokenMap = $dict(TokenAlbum,            TokenAlbumReadable, 
                          TokenAlbumArtist,      TokenAlbumArtistReadable, 
@@ -75,6 +96,12 @@
     return [self initWithEditingString:editingString];
 }
 
+-(void)dealloc
+{
+    RELEASE(_editingString);
+    SUPER_DEALLOC;
+}
+
 -(void)setEditingString:(NSString *)editingString
 {
     _editingString = [editingString copy];
@@ -87,7 +114,7 @@
 
 -(NSString*)editingString
 {
-    return [_editingString copy];
+    return AUTORELEASE([_editingString copy]);
 }
 
 -(NSString*)lookupKey
@@ -113,12 +140,14 @@
         displayString = [[[self class] tokenMap] valueForKey:[self lookupKey]];
         if (!displayString || [displayString length] == 0) {
             displayString = [self.editingString copy];
+        } else {
+            RETAIN(displayString);
         }
     } else {
         displayString = [self.editingString copy];
     }
     
-    return displayString;
+    return AUTORELEASE(displayString);
 }
 
 @end

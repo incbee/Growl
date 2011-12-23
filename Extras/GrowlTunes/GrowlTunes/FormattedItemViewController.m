@@ -7,6 +7,7 @@
 //
 
 #import "FormattedItemViewController.h"
+#import "macros.h"
 
 
 @interface FormattedItemViewController ()
@@ -28,6 +29,27 @@
 @synthesize titleField = _titleField;
 @synthesize detailsField = _detailsField;
 
+static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
+
++ (int)ddLogLevel
+{
+    return ddLogLevel;
+}
+
++ (void)ddSetLogLevel:(int)logLevel
+{
+    ddLogLevel = logLevel;
+}
+
++ (void)initialize
+{
+    if (self == [FormattedItemViewController class]) {
+        NSNumber *logLevel = [[NSUserDefaults standardUserDefaults] objectForKey:
+                              [NSString stringWithFormat:@"%@LogLevel", [self class]]];
+        if (logLevel)
+            ddLogLevel = [logLevel intValue];
+    }
+}
 
 - (id)init
 {
@@ -52,6 +74,11 @@
 {
     self.formattedDescription = nil;
     [self removeObserver:self forKeyPath:@"formattedDescription"];
+    RELEASE(_artworkView);
+    RELEASE(_titleField);
+    RELEASE(_detailsField);
+    RELEASE(_formattedDescription);
+    SUPER_DEALLOC;
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath
