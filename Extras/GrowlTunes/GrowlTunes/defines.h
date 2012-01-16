@@ -9,7 +9,17 @@
 #define LogTagState (1 << 2)
 
 
-//#define RENOTIFY_STREAM_KEY @"reNotifyOnStreamingTrackChange"
+#if defined(BETA) && BETA
+#define DAYSTOEXPIRY 14
+#endif
+
+
+#define COMPILED_ON __DATE__
+#define COMPILED_AT __TIME__
+#define COMPILER_VERSION __VERSION__
+
+
+/* #define RENOTIFY_STREAM_KEY @"reNotifyOnStreamingTrackChange" */
 #define NOTIFY_ITUNES_FRONTMOST @"notifyWhenITunesIsFrontmost"
 
 #define ITUNES_BUNDLE_ID @"com.apple.iTunes"
