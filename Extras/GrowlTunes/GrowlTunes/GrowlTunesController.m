@@ -6,33 +6,36 @@
 //  Copyright (c) 2011 The Growl Project. All rights reserved.
 //
 
-
+#import "defines.h"
 #import "GrowlTunesController.h"
+#import "iTunes+iTunesAdditions.h"
 #import "ITunesConductor.h"
 #import "FormattedItemViewController.h"
 #import "TrackRatingLevelIndicatorValueTransformer.h"
-#import "iTunes+iTunesAdditions.h"
-#import "defines.h"
-
+#import "StartAtLoginController.h"
+#import "DDTTYLogger.h"
+#import "DDASLLogger.h"
+#import "DispatchQueueLogFormatter.h"
 
 @interface GrowlTunesController ()
 
-@property(readwrite, retain, nonatomic) IBOutlet ITunesConductor* conductor;
+@property(readwrite, STRONG, nonatomic) IBOutlet ITunesConductor* conductor;
+@property(readonly, assign, nonatomic) BOOL noMeansNo;
+@property(readwrite, STRONG, nonatomic) id <DDLogFormatter> formatter;
+@property(readwrite, STRONG, nonatomic) StartAtLoginController* loginController;
 
-@property(readonly, nonatomic) BOOL noMeansNo;
-
-@property(readonly, retain, nonatomic) NSString* stringPlayPause;
-@property(readonly, retain, nonatomic) NSString* stringNextTrack;
-@property(readonly, retain, nonatomic) NSString* stringPreviousTrack;
-@property(readonly, retain, nonatomic) NSString* stringRating;
-@property(readonly, retain, nonatomic) NSString* stringVolume;
-@property(readonly, retain, nonatomic) NSString* stringBringITunesToFront;
-@property(readonly, retain, nonatomic) NSString* stringQuitBoth;
-@property(readonly, retain, nonatomic) NSString* stringQuitITunes;
-@property(readonly, retain, nonatomic) NSString* stringQuitGrowlTunes;
-@property(readonly, retain, nonatomic) NSString* stringStartITunes;
-@property(readonly, retain, nonatomic) NSString* stringNotifyWithITunesActive;
-@property(readonly, retain, nonatomic) NSString* stringConfigureFormatting;
+@property(readonly, STRONG, nonatomic) NSString* stringPlayPause;
+@property(readonly, STRONG, nonatomic) NSString* stringNextTrack;
+@property(readonly, STRONG, nonatomic) NSString* stringPreviousTrack;
+@property(readonly, STRONG, nonatomic) NSString* stringRating;
+@property(readonly, STRONG, nonatomic) NSString* stringVolume;
+@property(readonly, STRONG, nonatomic) NSString* stringBringITunesToFront;
+@property(readonly, STRONG, nonatomic) NSString* stringQuitBoth;
+@property(readonly, STRONG, nonatomic) NSString* stringQuitITunes;
+@property(readonly, STRONG, nonatomic) NSString* stringQuitGrowlTunes;
+@property(readonly, STRONG, nonatomic) NSString* stringStartITunes;
+@property(readonly, STRONG, nonatomic) NSString* stringNotifyWithITunesActive;
+@property(readonly, STRONG, nonatomic) NSString* stringConfigureFormatting;
 
 - (void)notifyWithTitle:(NSString*)title
             description:(NSString*)description
@@ -58,6 +61,8 @@
 @synthesize currentTrackMenuItem = _currentTrackMenuItem;
 @synthesize currentTrackController = _currentTrackController;
 @synthesize loggingMenu = _loggingMenu;
+@synthesize formatter = _formatter;
+@synthesize loginController = _loginController;
 
 
 static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
@@ -132,6 +137,9 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
 - (NSString*)stringConfigureFormatting
 { return MenuConfigureFormatting; }
 
+- (NSString*)stringStartAtLogin
+{ return MenuStartAtLogin; }
+
 - (NSString*)applicationNameForGrowl
 { return @"GrowlTunes"; }
 
@@ -149,11 +157,6 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
     
     NSURL* iconURL = [[NSBundle mainBundle] URLForImageResource:@"GrowlTunes"];
     NSImage* icon = [[NSImage alloc] initByReferencingURL:iconURL];
-    NSData* iconData = nil;
-    if (icon) {
-        LogImage(icon);
-        iconData = [icon TIFFRepresentation];
-    }
     
     NSDictionary* regDict = [NSDictionary dictionaryWithObjectsAndKeys:
                              @"GrowlTunes",             GROWL_APP_NAME,
@@ -161,7 +164,7 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
                              allNotifications,          GROWL_NOTIFICATIONS_ALL,
                              allNotifications,          GROWL_NOTIFICATIONS_DEFAULT,
                              notifications,             GROWL_NOTIFICATIONS_HUMAN_READABLE_NAMES,
-                             iconData,                  GROWL_APP_ICON_DATA,
+                             icon,                      GROWL_APP_ICON_DATA,
                              nil];
     
     RELEASE(icon);
@@ -192,31 +195,42 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
     }
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification*)aNotification
+- (void)applicationWillFinishLaunching:(NSNotification*)aNotification
 {
 #pragma unused(aNotification)
     
-    [DDLog addLogger:[DDASLLogger sharedInstance]];
+    self.formatter = [[DispatchQueueLogFormatter alloc] init];
+    
     [DDLog addLogger:[DDTTYLogger sharedInstance]];
+    [[DDTTYLogger sharedInstance] setLogFormatter:self.formatter];
+#if !defined(DEBUG)
+    [DDLog addLogger:[DDASLLogger sharedInstance]];
+    [[DDASLLogger sharedInstance] setLogFormatter:self.formatter];
+#endif
 #if defined(NSLOGGER)
     [DDLog addLogger:[DDNSLogger sharedInstance]];
-#endif
-    
-#if defined(BETA)
-    [self expiryCheck];
+    [[DDNSLogger sharedInstance] setLogFormatter:self.formatter];
 #endif
     
     [GrowlApplicationBridge setGrowlDelegate:self];
     [GrowlApplicationBridge setShouldUseBuiltInNotifications:YES];
     
-    [self createStatusItem];
-    
-    if (!_iTunesConductor) { self.conductor = AUTORELEASE([[ITunesConductor alloc] init]); }
-    [self.conductor addObserver:self forKeyPath:@"currentTrack" options:NSKeyValueObservingOptionInitial context:nil];
-    
 #if defined(FSCRIPT)
-    // not entirely sandbox friendly ;(
-    BOOL loaded = [[NSBundle bundleWithPath:@"/Library/Frameworks/FScript.framework"] load];
+    // fscript isn't entirely sandbox friendly ;(
+    
+    BOOL __block loaded = NO;
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, 
+                                                         (NSUserDomainMask | NSLocalDomainMask), YES);
+    [paths enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        NSString* frameworks = [(NSString*)obj stringByAppendingPathComponent:@"Frameworks"];
+        NSString* fscript = [frameworks stringByAppendingPathComponent:@"FScript.framework"];
+        loaded = [[NSBundle bundleWithPath:fscript] load];
+        if (loaded) {
+            LogVerbose(@"loaded FScript from framework at path: %@", fscript);
+            *stop = loaded;
+        }
+    }];
+    
     if (loaded) {
         Class FScriptMenuItem = NSClassFromString(@"FScriptMenuItem");
         id fscMenuItem = AUTORELEASE([[FScriptMenuItem alloc] init]);
@@ -234,6 +248,27 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
         [self.statusItemMenu addItem:fscMenuItem];
     }
 #endif
+    
+    NSBundle* launcherBundle = [NSBundle bundleWithPath:
+         [[[NSBundle mainBundle] bundlePath]
+          stringByAppendingPathComponent:@"Contents/Library/LoginItems/GrowlTunesLauncher.app"]];
+    self.loginController = [[StartAtLoginController alloc] initWithBundle:launcherBundle];
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification*)aNotification
+{
+#pragma unused(aNotification)
+    
+    LogVerbose(@"GrowlTunes launched");
+    
+#if defined(BETA)
+    [self expiryCheck];
+#endif
+    
+    [self createStatusItem];
+    
+    if (!_iTunesConductor) { self.conductor = AUTORELEASE([[ITunesConductor alloc] init]); }
+    [self.conductor addObserver:self forKeyPath:@"currentTrack" options:NSKeyValueObservingOptionInitial context:nil];
 }
 
 -(void)dealloc
@@ -245,6 +280,7 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
     RELEASE(_currentTrackController);
     RELEASE(_statusItem);
     RELEASE(_formatwc);
+    RELEASE(_formatter);
     SUPER_DEALLOC;
 }
 
@@ -351,9 +387,9 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
     
     if (class == [NSNull null]) {
         NSArray* classes = [DDLog registeredClasses];
-        for (Class class in classes) {
-            [DDLog setLogLevel:[level intValue] forClass:class];
-            LogInfo(@"Setting log level for class %@ to %@", NSStringFromClass(class), name);
+        for (Class _class in classes) {
+            [DDLog setLogLevel:[level intValue] forClass:_class];
+            LogInfo(@"Setting log level for class %@ to %@", NSStringFromClass(_class), name);
         }
     } else {
         [DDLog setLogLevel:[level intValue] forClass:class];
@@ -368,11 +404,11 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
         _statusItem = [statusBar statusItemWithLength:NSVariableStatusItemLength];
         if (_statusItem) {
             RETAIN(_statusItem);
-//            [_statusItem setMenu:self.statusItemMenu];
             [_statusItem setImage:[NSImage imageNamed:@"GrowlTunes-Template.pdf"]];
             [_statusItem setHighlightMode:YES];
             [_statusItem setAction:@selector(openMenu:)];
             [_statusItem setTarget:self];
+//            [_statusItem setMenu:self.statusItemMenu];
         }
     }
 }
@@ -381,10 +417,12 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
 {
 #pragma unused(sender)
     
-    if ([[NSUserDefaults standardUserDefaults] objectForKey:@"enableLoggingConfiguration"]) {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"enableLoggingConfiguration"]) {
+        LogVerbose(@"populating logging menu");
         [self populateLoggingMenu];
     }
     
+    LogVerbose(@"popUpStatusItemMenu:");
     [_statusItem popUpStatusItemMenu:self.statusItemMenu];
 }
 

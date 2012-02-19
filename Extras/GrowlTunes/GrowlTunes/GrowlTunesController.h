@@ -11,7 +11,7 @@
 #import <Growl/Growl.h>
 #import "macros.h"
 
-@class ITunesConductor, FormattedItemViewController;
+@class ITunesConductor, FormattedItemViewController, StartAtLoginController;
 
 @interface GrowlTunesController : NSObject <GrowlApplicationBridgeDelegate, NSApplicationDelegate> {
     ITunesConductor* _iTunesConductor;
@@ -21,13 +21,16 @@
     NSStatusItem* _statusItem;
     NSWindowController* _formatwc;
     NSMenu* _loggingMenu;
+    id <DDLogFormatter> _formatter;
+    StartAtLoginController* _loginController;
 }
 
-@property(readonly, retain, nonatomic) IBOutlet ITunesConductor* conductor;
-@property(readwrite, retain, nonatomic) IBOutlet NSMenu* statusItemMenu;
-@property(readwrite, retain, nonatomic) IBOutlet NSMenuItem* currentTrackMenuItem;
-@property(readwrite, retain, nonatomic) IBOutlet FormattedItemViewController* currentTrackController;
-@property(readwrite, retain, nonatomic) IBOutlet NSMenu* loggingMenu;
+@property(readonly, STRONG, nonatomic) IBOutlet ITunesConductor* conductor;
+@property(readonly, STRONG, nonatomic) StartAtLoginController* loginController;
+@property(readwrite, STRONG, nonatomic) IBOutlet NSMenu* statusItemMenu;
+@property(readwrite, STRONG, nonatomic) IBOutlet NSMenuItem* currentTrackMenuItem;
+@property(readwrite, STRONG, nonatomic) IBOutlet FormattedItemViewController* currentTrackController;
+@property(readwrite, STRONG, nonatomic) IBOutlet NSMenu* loggingMenu;
 
 - (IBAction)configureFormatting:(id)sender;
 - (IBAction)quitGrowlTunes:(id)sender;
