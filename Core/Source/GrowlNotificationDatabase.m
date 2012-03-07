@@ -52,11 +52,13 @@
 
 -(void)dealloc
 {
-   [[NSNotificationCenter defaultCenter] removeObserver:self];
-   [maintenanceTimer invalidate];
-   [maintenanceTimer release]; maintenanceTimer = nil;
-   [lastImageCheck release]; lastImageCheck = nil;
-   [super dealloc]; 
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [periodicSaveTimer invalidate];
+    [periodicSaveTimer release]; periodicSaveTimer = nil;
+    [maintenanceTimer invalidate];
+    [maintenanceTimer release]; maintenanceTimer = nil;
+    [lastImageCheck release]; lastImageCheck = nil;
+    [super dealloc]; 
 }
 
 -(NSString*)storePath
@@ -110,6 +112,7 @@
 }
 
 #pragma mark -
+
 -(void)deleteSelectedObjects:(NSArray*)objects
 {
     void (^deleteBlock)(void) = ^{
@@ -135,6 +138,7 @@
         deleteBlock();
     [self saveDatabase:NO];
 }
+
 -(void)deleteAllHistory
 {
     void (^deleteBlock)(void) = ^{
@@ -194,6 +198,11 @@
       lastImageCheck = [[NSDate date] retain];
    }
    [self saveDatabase:NO];
+}
+
+- (void)periodicSave:(NSTimer*)timer
+{
+    [self saveDatabase:NO];    
 }
 
 -(void)trimByDate
@@ -332,7 +341,10 @@
         return;
     }
     NSLog(@"Setup timer, this should only happen once");
-    
+	
+	periodicSaveTimer = [[NSTimer timerWithTimeInterval:20.0f target:self selector:@selector(periodicSave:) userInfo:nil repeats:YES] retain];
+	[[NSRunLoop mainRunLoop] addTimer:periodicSaveTimer forMode:NSRunLoopCommonModes];
+	[[NSRunLoop mainRunLoop] addTimer:periodicSaveTimer forMode:NSEventTrackingRunLoopMode];
     //Setup timers, every half hour for DB maintenance, every night for Cache cleanup   
     maintenanceTimer = [[NSTimer timerWithTimeInterval:30 * 60 
                                                 target:self
@@ -340,6 +352,7 @@
                                               userInfo:nil
                                                repeats:YES] retain];
     [[NSRunLoop mainRunLoop] addTimer:maintenanceTimer forMode:NSRunLoopCommonModes];
+	[[NSRunLoop mainRunLoop] addTimer:maintenanceTimer forMode:NSEventTrackingRunLoopMode];
     
     NSDateComponents *components = [[NSCalendar currentCalendar] components:(NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit) fromDate:[NSDate date]];
     [components setDay:[components day] - 1];
@@ -411,7 +424,7 @@
         [managedObjectContext performBlockAndWait:logBlock];
     else
         logBlock();
-    [self saveDatabase:NO];
+    //[self saveDatabase:NO];
     
     if(isAway)
     {

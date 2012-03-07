@@ -135,7 +135,6 @@ static struct Version version = { 0U, 0U, 0U, releaseType_vcs, 0U, };
 	Class pathwayControllerClass = NSClassFromString(@"GrowlPathwayController");
 	if (pathwayControllerClass)
 		[(id)[pathwayControllerClass sharedController] setServerEnabled:NO];
-	[growlIcon        release]; growlIcon = nil;
 	[defaultDisplayPlugin release]; defaultDisplayPlugin = nil;
     [preferencesWindow release]; preferencesWindow = nil;
 
@@ -171,7 +170,7 @@ static struct Version version = { 0U, 0U, 0U, releaseType_vcs, 0U, };
 									 desc,       GROWL_NOTIFICATION_DESCRIPTION,
 									 priority,   GROWL_NOTIFICATION_PRIORITY,
 									 sticky,     GROWL_NOTIFICATION_STICKY,
-									 growlIcon,  GROWL_NOTIFICATION_ICON_DATA,
+									 [NSImage imageNamed:NSImageNameApplicationIcon],  GROWL_NOTIFICATION_ICON_DATA,
 									 nil];
 		[desc     release];
 		[priority release];
@@ -854,9 +853,7 @@ static struct Version version = { 0U, 0U, 0U, releaseType_vcs, 0U, };
         [pathwayControllerClass sharedController];
     
     [self preferencesChanged:nil];
-        
-    growlIcon = [[NSImage imageNamed:@"NSApplicationIcon"] retain];
-    
+	
     GrowlIdleStatusController_init();
     
     // create and register GrowlNotificationCenter

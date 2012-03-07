@@ -31,8 +31,6 @@ typedef enum {
 	BOOL						quitAfterOpen;
 
 	NSDictionary				*versionInfo;
-	NSImage						*growlIcon;
-	NSData						*growlIconData;
 	
 	CFRunLoopTimerRef			updateTimer;
 	    
