@@ -74,7 +74,8 @@
 	else
 		wc = [[windowControllerClass alloc] initWithBridge:self];
 
-	[self addWindowController:wc];
+	if(wc)
+        [self addWindowController:wc];
 	[wc release];
 }
 

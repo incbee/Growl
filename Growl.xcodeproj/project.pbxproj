@@ -957,6 +957,34 @@
 		8321E9A10C0B760C008C441B /* NotifyOSX.growlStyle */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NotifyOSX.growlStyle; path = Core/Resources/NotifyOSX.growlStyle; sourceTree = "<group>"; };
 		83282741073A6BD70044A959 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		83282746073A6C110044A959 /* PreferencePanes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PreferencePanes.framework; path = /System/Library/Frameworks/PreferencePanes.framework; sourceTree = "<absolute>"; };
+		834DA0F4150AF90B003B6FA5 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = Core/Resources/fr.lproj/OldGrowl.rtf; sourceTree = "<group>"; };
+		834DA0F5150AF90B003B6FA5 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = Core/Resources/fr.lproj/StartAtLogin.rtf; sourceTree = "<group>"; };
+		834DA0F6150AF90B003B6FA5 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = Core/Resources/fr.lproj/Welcome.rtf; sourceTree = "<group>"; };
+		834DA0F7150AF90B003B6FA5 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = Core/Resources/fr.lproj/WhatsNew.rtf; sourceTree = "<group>"; };
+		834DA12F150AFF64003B6FA5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hant"; path = "zh-Hant.lproj/About.rtf"; sourceTree = "<group>"; };
+		834DA134150AFF7C003B6FA5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hant"; path = "Core/Resources/zh-Hant.lproj/OldGrowl.rtf"; sourceTree = "<group>"; };
+		834DA135150AFF7C003B6FA5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hant"; path = "Core/Resources/zh-Hant.lproj/StartAtLogin.rtf"; sourceTree = "<group>"; };
+		834DA136150AFF7C003B6FA5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hant"; path = "Core/Resources/zh-Hant.lproj/Welcome.rtf"; sourceTree = "<group>"; };
+		834DA137150AFF7C003B6FA5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hant"; path = "Core/Resources/zh-Hant.lproj/WhatsNew.rtf"; sourceTree = "<group>"; };
+		834DA13C150AFFA2003B6FA5 /* zh-Hant */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		834DA13D150AFFA2003B6FA5 /* zh-Hant */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		834DA13E150AFFA2003B6FA5 /* zh-Hant */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "Core/Resources/zh-Hant.lproj/mainmenu.strings"; sourceTree = "<group>"; };
+		834DA14C150B07CD003B6FA5 /* zh-Hans */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		834DA14D150B07CD003B6FA5 /* zh-Hans */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		834DA14E150B07CD003B6FA5 /* zh-Hans */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Core/Resources/zh-Hans.lproj/mainmenu.strings"; sourceTree = "<group>"; };
+		834DA195150B3E34003B6FA5 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = nb; path = Core/Resources/nb.lproj/OldGrowl.rtf; sourceTree = "<group>"; };
+		834DA196150B3E34003B6FA5 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = nb; path = Core/Resources/nb.lproj/StartAtLogin.rtf; sourceTree = "<group>"; };
+		834DA197150B3E34003B6FA5 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = nb; path = Core/Resources/nb.lproj/Welcome.rtf; sourceTree = "<group>"; };
+		834DA198150B3E34003B6FA5 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = nb; path = Core/Resources/nb.lproj/WhatsNew.rtf; sourceTree = "<group>"; };
+		834DA19D150B3ECE003B6FA5 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hans"; path = "zh-Hans.lproj/About.rtf"; sourceTree = "<group>"; };
+		834DA1A2150B3EE1003B6FA5 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hans"; path = "Core/Resources/zh-Hans.lproj/OldGrowl.rtf"; sourceTree = "<group>"; };
+		834DA1A3150B3EE1003B6FA5 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hans"; path = "Core/Resources/zh-Hans.lproj/StartAtLogin.rtf"; sourceTree = "<group>"; };
+		834DA1A4150B3EE1003B6FA5 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hans"; path = "Core/Resources/zh-Hans.lproj/Welcome.rtf"; sourceTree = "<group>"; };
+		834DA1A5150B3EE1003B6FA5 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = "zh-Hans"; path = "Core/Resources/zh-Hans.lproj/WhatsNew.rtf"; sourceTree = "<group>"; };
+		834DA1AA150B4489003B6FA5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = ja; path = Core/Resources/ja.lproj/OldGrowl.rtf; sourceTree = "<group>"; };
+		834DA1AB150B4489003B6FA5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = ja; path = Core/Resources/ja.lproj/StartAtLogin.rtf; sourceTree = "<group>"; };
+		834DA1AC150B4489003B6FA5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = ja; path = Core/Resources/ja.lproj/Welcome.rtf; sourceTree = "<group>"; };
+		834DA1AD150B4489003B6FA5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = ja; path = Core/Resources/ja.lproj/WhatsNew.rtf; sourceTree = "<group>"; };
 		835A0ACD142A85E100B89123 /* Raaarr.growlStyle */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Raaarr.growlStyle; path = Core/Resources/Raaarr.growlStyle; sourceTree = "<group>"; };
 		835A0AE0142C73DE00B89123 /* Growl-REGDICT.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "Growl-REGDICT.icns"; path = "images/DocumentIcons/Growl-REGDICT.icns"; sourceTree = "<group>"; };
 		835A0AE1142C73DE00B89123 /* Growl-STYLE.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "Growl-STYLE.icns"; path = "images/DocumentIcons/Growl-STYLE.icns"; sourceTree = "<group>"; };
@@ -3339,6 +3367,8 @@
 				"lv-LV",
 				ro,
 				"pl-PL",
+				"zh-Hant",
+				"zh-Hans",
 			);
 			mainGroup = 089C166AFE841209C02AAC07 /* Growl */;
 			projectDirPath = "";
@@ -4286,6 +4316,8 @@
 				93350158142399230077C0D7 /* ko */,
 				83DD3AEB14F0B22400C0028D /* sk */,
 				83DD3AF014F0B3DF00C0028D /* pl */,
+				834DA12F150AFF64003B6FA5 /* zh-Hant */,
+				834DA19D150B3ECE003B6FA5 /* zh-Hans */,
 			);
 			name = About.rtf;
 			path = Core/Resources;
@@ -4311,6 +4343,8 @@
 				83CFCCE214ECB80100C0D0C1 /* ro */,
 				BCA6C74B14ECC65F005F5DE3 /* lv */,
 				83DD3AF514F0B41900C0028D /* pl */,
+				834DA13C150AFFA2003B6FA5 /* zh-Hant */,
+				834DA14C150B07CD003B6FA5 /* zh-Hans */,
 			);
 			name = InfoPlist.strings;
 			path = Core/Resources;
@@ -4337,6 +4371,8 @@
 				83CFCCDD14ECB7F900C0D0C1 /* ro */,
 				83CFCCE514ECBA6500C0D0C1 /* ru */,
 				83DD3AF614F0B42900C0028D /* pl */,
+				834DA13D150AFFA2003B6FA5 /* zh-Hant */,
+				834DA14D150B07CD003B6FA5 /* zh-Hans */,
 			);
 			name = Localizable.strings;
 			path = Core/Resources;
@@ -4353,6 +4389,11 @@
 				83DD3AE714EF7CEB00C0028D /* es */,
 				83DD3AEF14F0B25500C0028D /* sk */,
 				83DD3AF414F0B3FF00C0028D /* pl */,
+				834DA0F7150AF90B003B6FA5 /* fr */,
+				834DA137150AFF7C003B6FA5 /* zh-Hant */,
+				834DA198150B3E34003B6FA5 /* nb */,
+				834DA1A5150B3EE1003B6FA5 /* zh-Hans */,
+				834DA1AD150B4489003B6FA5 /* ja */,
 			);
 			name = WhatsNew.rtf;
 			sourceTree = "<group>";
@@ -4368,6 +4409,11 @@
 				83DD3AE514EF7CEB00C0028D /* es */,
 				83DD3AED14F0B25500C0028D /* sk */,
 				83DD3AF214F0B3FF00C0028D /* pl */,
+				834DA0F5150AF90B003B6FA5 /* fr */,
+				834DA135150AFF7C003B6FA5 /* zh-Hant */,
+				834DA196150B3E34003B6FA5 /* nb */,
+				834DA1A3150B3EE1003B6FA5 /* zh-Hans */,
+				834DA1AB150B4489003B6FA5 /* ja */,
 			);
 			name = StartAtLogin.rtf;
 			sourceTree = "<group>";
@@ -4382,6 +4428,11 @@
 				83DD3ADD14EF7BB100C0028D /* lv */,
 				83DD3AEC14F0B25500C0028D /* sk */,
 				83DD3AF114F0B3FF00C0028D /* pl */,
+				834DA0F4150AF90B003B6FA5 /* fr */,
+				834DA134150AFF7C003B6FA5 /* zh-Hant */,
+				834DA195150B3E34003B6FA5 /* nb */,
+				834DA1A2150B3EE1003B6FA5 /* zh-Hans */,
+				834DA1AA150B4489003B6FA5 /* ja */,
 			);
 			name = OldGrowl.rtf;
 			sourceTree = "<group>";
@@ -4430,6 +4481,8 @@
 				83A2C56014ECC07A00AF96FA /* sk */,
 				83A2C56814ECC0D000AF96FA /* ro */,
 				83DD3AF714F0B43500C0028D /* pl */,
+				834DA13E150AFFA2003B6FA5 /* zh-Hant */,
+				834DA14E150B07CD003B6FA5 /* zh-Hans */,
 			);
 			name = mainmenu.strings;
 			sourceTree = "<group>";
@@ -4550,6 +4603,11 @@
 				83DD3AE614EF7CEB00C0028D /* es */,
 				83DD3AEE14F0B25500C0028D /* sk */,
 				83DD3AF314F0B3FF00C0028D /* pl */,
+				834DA0F6150AF90B003B6FA5 /* fr */,
+				834DA136150AFF7C003B6FA5 /* zh-Hant */,
+				834DA197150B3E34003B6FA5 /* nb */,
+				834DA1A4150B3EE1003B6FA5 /* zh-Hans */,
+				834DA1AC150B4489003B6FA5 /* ja */,
 			);
 			name = Welcome.rtf;
 			sourceTree = "<group>";
