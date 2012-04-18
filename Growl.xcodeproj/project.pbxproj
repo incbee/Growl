@@ -339,6 +339,7 @@
 		BC986FD814D0FE3D00CC5E57 /* Welcome.rtf in Resources */ = {isa = PBXBuildFile; fileRef = BC986FD614D0FE3C00CC5E57 /* Welcome.rtf */; };
 		BC9AE9731255952700759016 /* GrowlImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = BC9AE9721255952700759016 /* GrowlImageCache.m */; };
 		BC9AF57C125B81A400759016 /* GrowlNotificationDatabase+GHAAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = BC9AF57B125B81A400759016 /* GrowlNotificationDatabase+GHAAdditions.m */; };
+		BCA0823E153EF9BD00340F16 /* Growl.icns in Resources */ = {isa = PBXBuildFile; fileRef = 93A60E3F13C4159B00514EF8 /* Growl.icns */; };
 		BCA9D4631422228A00C98C98 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BCA9D4621422228A00C98C98 /* main.m */; };
 		BCA9D468142222A500C98C98 /* GNTPClientService.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = BCA9D466142222A500C98C98 /* GNTPClientService.entitlements */; };
 		BCAB1EC414780674005E2BB0 /* GNTPForwarder.m in Sources */ = {isa = PBXBuildFile; fileRef = BCAB1EC314780674005E2BB0 /* GNTPForwarder.m */; };
@@ -3541,6 +3542,7 @@
 				BC29B28314D12D5300C72855 /* InfoPlist.strings in Resources */,
 				BC29B28914D12D5300C72855 /* Credits.rtf in Resources */,
 				BC29B28F14D12D5300C72855 /* MainMenu.xib in Resources */,
+				BCA0823E153EF9BD00340F16 /* Growl.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
