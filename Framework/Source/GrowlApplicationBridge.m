@@ -92,6 +92,8 @@ static BOOL    hasGNTP = NO;
 
 static BOOL    shouldUseBuiltInNotifications = YES;
 
+static dispatch_queue_t notificationQueue_Queue;
+
 static struct {
     unsigned int growlNotificationWasClicked : 1;
     unsigned int growlNotificationTimedOut : 1;
@@ -106,6 +108,23 @@ static struct {
 #pragma mark -
 
 @implementation GrowlApplicationBridge
+
++ (NSMutableArray *) queuedNotes {
+	static NSMutableArray *queuedGrowlNotifications = nil;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		queuedGrowlNotifications = [[NSMutableArray alloc] init];
+		notificationQueue_Queue = dispatch_queue_create("com.growl.growlframework.notequeue_queue", 0);
+	});
+	return queuedGrowlNotifications;
+}
+
++ (void) queueNote:(NSDictionary*)note {
+	NSMutableArray *queue = [self queuedNotes];
+	dispatch_async(notificationQueue_Queue, ^{
+		[queue addObject:note];
+	});
+}
 
 + (NSMutableArray *) attempts {
 	if (!_attempts)
@@ -313,17 +332,16 @@ static struct {
    }else{ 
       if ([self _growlIsReachableUpdateCache:NO])
       {
-         if (!queuedGrowlNotifications)
-            queuedGrowlNotifications = [[NSMutableArray alloc] init];
-         [queuedGrowlNotifications addObject:userInfo];
+         [self queueNote:userInfo];
          
          if(!attemptingToRegister)
             [self registerWithDictionary:nil];
       } else {
-         if([GrowlApplicationBridge isMistEnabled])
+         if([GrowlApplicationBridge isMistEnabled]){
             dispatch_async(dispatch_get_main_queue(), ^(void) {
-            [GrowlApplicationBridge _fireMiniDispatch:userInfo];
-         });
+					[GrowlApplicationBridge _fireMiniDispatch:userInfo];
+				});
+			}
       }
    }
 }
@@ -717,10 +735,16 @@ static struct {
 
 + (void) _emptyQueue
 {
-   for (NSDictionary *noteDict in queuedGrowlNotifications) {
-      [self notifyWithDictionary:noteDict];
-   }
-   [queuedGrowlNotifications release]; queuedGrowlNotifications = nil;
+	NSMutableArray *queue = [self queuedNotes];
+	dispatch_async(notificationQueue_Queue, ^{
+		if([queue count]){
+			[queue enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+				if([obj isKindOfClass:[NSDictionary class]])
+					[self notifyWithDictionary:obj];
+			}];
+			[queue removeAllObjects];
+		}
+	});
 }
 
 + (void) _growlIsReady:(NSNotification *)notification {
@@ -860,6 +884,30 @@ static struct {
       NSLog(@"Failed all attempts at %@", attempt.attemptType == GrowlCommunicationAttemptTypeNotify ? @"notifying" : @"registering");
       if(attempt.attemptType == GrowlCommunicationAttemptTypeRegister){
          attemptingToRegister = NO;
+			
+			/* If we have queued notes and we failed to register, 
+			 * send them to _fireMiniDispatch if mist is enabled.
+			 * Regardless, remove all dicts from the queue. 
+			 * If we cant register, we probably can't send the notes to Growl.
+			 */
+			NSMutableArray *queue = [self queuedNotes];
+			if([queue count]){
+				if([self isMistEnabled]){
+					NSLog(@"We failed at registering with items in our queue waiting to go to growl, sending them to Mist instead");
+					dispatch_async(notificationQueue_Queue, ^{
+						[queue enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+							if([obj isKindOfClass:[NSDictionary class]]){
+								dispatch_async(dispatch_get_main_queue(), ^{
+									[self _fireMiniDispatch:obj];
+								});
+							}
+						}];
+					});
+				}
+				dispatch_async(notificationQueue_Queue, ^{
+					[queue removeAllObjects];
+				});
+			}
       }
    }
    [[self attempts] removeObject:attempt];
@@ -871,9 +919,7 @@ static struct {
    if(attempt.attemptType != GrowlCommunicationAttemptTypeNotify)
       return;
    
-   if(!queuedGrowlNotifications)
-      queuedGrowlNotifications = [[NSMutableArray alloc] init];
-   [queuedGrowlNotifications addObject:[attempt dictionary]];
+   [self queueNote:[attempt dictionary]];
    [self reregisterGrowlNotifications];
 }
 
