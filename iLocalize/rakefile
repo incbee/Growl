@@ -88,6 +88,7 @@ shortcodes = {
     :cs => 'cs',
     :el => 'el',
     :es_ES => 'es',
+    :es_MX => 'es-MX',
     :fr => 'fr',
     :nl => 'nl',
     :pt_PT => 'pt_PT',
@@ -116,6 +117,15 @@ growl_translations = {
     :mailme =>      {:source => growl_mailme_display_strings, :destination => "#{mailme_display_destination}/%%lproj%%/Localizable.strings"},
     :speech =>      {:source => growl_speech_display_strings, :destination => "#{speech_display_destination}/%%lproj%%/Localizable.strings"},
     :brushed =>     {:source => growl_brushed_display_strings,:destination => "#{brushed_display_destination}/%%lproj%%/Localizable.strings"},
+}
+
+
+
+
+extras_translations = {
+    :capster =>         {:source => capster_localizable_strings,         :destination => "#{capster_subdir}/%%lproj%%/Localizable.strings"},
+    :growltunes =>      {:source => growltunes_localizable_strings,      :destination => "#{growltunes_subdir}/%%lproj%%/Localizable.strings"},
+    :hardwaregrowler => {:source => hardwaregrowler_localizable_strings, :destination => "#{hardwaregrowler_dir}/%%lproj%%/Localizable.strings"},
 }
 
 #################
@@ -151,7 +161,8 @@ task :translate, :source, :destination do |t, args|
 #            puts "from #{source}/#{strings} to #{destCopy}"
             FileUtils.cp_r("#{source}/#{strings}", "#{destCopy}")
 #        else
-#            puts "Either start or destination doesn't exist"
+#           puts "#{destCopy} is missing"
+
         end
 #        puts "Done with #{key}"
     end
@@ -165,6 +176,17 @@ task :update_growl do
         Rake::Task[:translate].execute(value)
     end
     puts "Done Updating Growl"
+end
+
+
+desc "update all growl.app bundled translations"
+task :update_extras do
+    extras_translations.each_pair do |key, value|
+        puts "copying translations for #{key}"
+        #the hash in extrasl_translations has the right keys for the :translate task
+        Rake::Task[:translate].execute(value)
+    end
+    puts "Done Updating Extras"
 end
 
 desc "update shortcut recorder"
