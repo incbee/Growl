@@ -19,59 +19,44 @@
 
 @synthesize isDynamic = _isDynamic;
 
-static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
-
-+ (int)ddLogLevel
-{
-    return ddLogLevel;
-}
-
-+ (void)ddSetLogLevel:(int)logLevel
-{
-    ddLogLevel = logLevel;
-}
-
-+ (void)initialize
-{
-    if (self == [FormattingToken class]) {
-        NSNumber *logLevel = [[NSUserDefaults standardUserDefaults] objectForKey:
-                              [NSString stringWithFormat:@"%@LogLevel", [self class]]];
-        if (logLevel)
-            ddLogLevel = [logLevel intValue];
-    }
-}
-
 +(NSDictionary*)tokenMap
 {
-    static __STRONG NSDictionary* tokenMap;
-    if (!tokenMap) {
-        tokenMap = $dict(TokenAlbum,            TokenAlbumReadable, 
-                         TokenAlbumArtist,      TokenAlbumArtistReadable, 
-                         TokenArtist,           TokenArtistReadable, 
-                         TokenBestArtist,       TokenBestArtistReadable, 
-                         TokenBestDescription,  TokenBestDescriptionReadable, 
-                         TokenComment,          TokenCommentReadable, 
-                         TokenDescription,      TokenDescriptionReadable, 
-                         TokenEpisodeID,        TokenEpisodeIDReadable, 
-                         TokenEpisodeNumber,    TokenEpisodeNumberReadable, 
-                         TokenLongDescription,  TokenLongDescriptionReadable, 
-                         TokenName,             TokenNameReadable, 
-                         TokenSeasonNumber,     TokenSeasonNumberReadable, 
-                         TokenShow,             TokenShowReadable, 
-                         TokenStreamTitle,      TokenStreamTitleReadable, 
-                         TokenTrackCount,       TokenTrackCountReadable, 
-                         TokenTrackNumber,      TokenTrackNumberReadable, 
-                         TokenTime,             TokenTimeReadable, 
-                         TokenVideoKindName,    TokenVideoKindNameReadable);
-    }
-    return tokenMap;
+   static __STRONG NSDictionary* tokenMap;
+   static dispatch_once_t onceToken;
+   dispatch_once(&onceToken, ^{
+      tokenMap = @{TokenAlbum:				TokenAlbumReadable,
+							TokenAlbumArtist:		TokenAlbumArtistReadable,
+							TokenArtist:			TokenArtistReadable,
+							TokenBestArtist:		TokenBestArtistReadable,
+							TokenBestDescription:TokenBestDescriptionReadable,
+							TokenComment:			TokenCommentReadable,
+							TokenDescription:		TokenDescriptionReadable,
+							TokenEpisodeID:		TokenEpisodeIDReadable,
+							TokenEpisodeNumber:	TokenEpisodeNumberReadable,
+							TokenLongDescription:TokenLongDescriptionReadable,
+							TokenName:				TokenNameReadable,
+							TokenSeasonNumber:	TokenSeasonNumberReadable,
+							TokenShow:				TokenShowReadable,
+							TokenStreamTitle:		TokenStreamTitleReadable,
+							TokenTrackCount:		TokenTrackCountReadable,
+							TokenTrackNumber:		TokenTrackNumberReadable,
+							TokenTime:				TokenTimeReadable,
+							TokenVideoKindName:	TokenVideoKindNameReadable,
+							TokenRating:			TokenRatingReadable};
+	});
+   return tokenMap;
+}
+
++(FormattingToken*)tokenWithEditingString:(NSString*)token {
+	return AUTORELEASE([[FormattingToken alloc] initWithEditingString:token]);
 }
 
 -(id)initWithEditingString:(NSString *)editingString
 {
-    self = [super init];
-    self.editingString = editingString;
-    return self;
+	if((self = [super init])){
+		self.editingString = editingString;
+	}
+	return self;
 }
 
 -(void)encodeWithCoder:(NSCoder *)encoder

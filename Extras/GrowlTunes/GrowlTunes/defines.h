@@ -22,6 +22,8 @@
 
 #pragma mark defaults setting names
 #define NOTIFY_ITUNES_FRONTMOST         @"notifyWhenITunesIsFrontmost"
+#define NOTIFY_ON_PAUSE						@"notifyOnPause"
+#define NOTIFY_ON_STOP						@"notifyOnStop"
 
 #pragma mark bundle/notification IDs
 #define ITUNES_BUNDLE_ID                @"com.apple.iTunes"
@@ -39,8 +41,15 @@
 #define NotifierStartedReadable         NSLocalizedString(@"Started", nil)
 
 #pragma mark formatting helpers
+#define podcastReadable                 NSLocalizedString(@"Podcast", nil)
+#define streamReadable                  NSLocalizedString(@"Stream", nil)
+#define showReadable                    NSLocalizedString(@"Show", nil)
+#define movieReadable                   NSLocalizedString(@"Movie", nil)
+#define musicVideoReadable              NSLocalizedString(@"MusicVideo", nil)
+#define musicReadable                   NSLocalizedString(@"Music", nil)
 #define formattingTypes                 @"podcast", @"stream", @"show", @"movie", @"musicVideo", @"music"
-#define formattingAttributes            @"title", @"line1", @"line2", @"line3"
+#define formattingTypesReadable         podcastReadable, streamReadable, showReadable, movieReadable, musicVideoReadable, musicReadable
+#define formattingAttributes            @"titleArray", @"descriptionArray"
 
 #pragma mark formatting token names
 #define TokenAlbum                      @"album"
@@ -61,6 +70,7 @@
 #define TokenTrackNumber                @"trackNumber"
 #define TokenTime                       @"time"
 #define TokenVideoKindName              @"videoKindName"
+#define TokenRating							 @"rating"
 
 #pragma mark formatting token text
 #define TokenAlbumReadable              NSLocalizedString(@"Album", nil)
@@ -81,6 +91,7 @@
 #define TokenTrackNumberReadable        NSLocalizedString(@"Track Number", nil)
 #define TokenTimeReadable               NSLocalizedString(@"Play Time", nil)
 #define TokenVideoKindNameReadable      NSLocalizedString(@"Video Kind", nil)
+#define TokenRatingReadable				 NSLocalizedString(@"Rating", nil)
 
 #pragma mark menu entries
 #define MenuPlayPause                   NSLocalizedString(@"▶ Play/Pause", nil)
