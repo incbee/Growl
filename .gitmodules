@@ -3,7 +3,7 @@
 	url = git://github.com/growl/CocoaAsyncSocket.git
 [submodule "external_dependencies/iso8601parser"]
 	path = external_dependencies/iso8601parser
-	url = git://github.com/growl/iso-8601-parser-unparser.git
+	url = git://github.com/growl/iso-8601-date-formatter.git
 [submodule "external_dependencies/SGHotKeysLib"]
 	path = external_dependencies/SGHotKeysLib
 	url = git://github.com/growl/SGHotKeysLib.git
