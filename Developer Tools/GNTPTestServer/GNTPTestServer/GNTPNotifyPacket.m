@@ -30,23 +30,26 @@
 @synthesize callbackString = _callbackString;
 @synthesize callbackType = _callbackType;
 
-+(NSData*)feedbackData:(BOOL)clicked forGrowlDictionary:(NSDictionary*)dictionary {
++(NSData*)feedbackData:(NSString*)feedback forGrowlDictionary:(NSDictionary*)dictionary {
 	NSData *feedbackData = nil;
 	
 	//Build a feedback response
 	//This should support encrypting replies at some point
 	NSMutableString *response = [NSMutableString stringWithString:@"GNTP/1.0 -CALLBACK NONE\r\n"];
-	[response appendFormat:@"Application-Name: %@\r\n", [dictionary valueForKey:GROWL_APP_NAME]];
+	[response appendFormat:@"%@: %@\r\n", GrowlGNTPApplicationNameHeader, [dictionary valueForKey:GROWL_APP_NAME]];
 	if([dictionary valueForKey:GROWL_NOTIFICATION_INTERNAL_ID])
-		[response appendFormat:@"Notification-ID: %@\r\n", [dictionary valueForKey:GROWL_NOTIFICATION_INTERNAL_ID]];
-	[response appendFormat:@"Notification-Callback-Result: %@\r\n", clicked ? @"CLICKED" : @"TIMEOUT"];
+		[response appendFormat:@"%@: %@\r\n", GrowlGNTPNotificationID, [dictionary valueForKey:GROWL_NOTIFICATION_INTERNAL_ID]];
+	[response appendFormat:@"%@: %@\r\n", GrowlGNTPNotificationCallbackResult, feedback];
 	
 	static ISO8601DateFormatter *_dateFormatter = nil;
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		_dateFormatter = [[ISO8601DateFormatter alloc] init];
 	});
-	[response appendFormat:@"Notification-Callback-Timestamp: %@\r\n", [_dateFormatter stringFromDate:[NSDate date]]];
+	[response appendFormat:@"%@: %@\r\n", GrowlGNTPNotificationCallbackTimestamp, [_dateFormatter stringFromDate:[NSDate date]]];
+	
+	//Append where this came from
+	[response appendString:[GNTPPacket originString]];
 	
 	NSString *contextType = [dictionary valueForKey:GROWL_NOTIFICATION_CLICK_CONTENT_TYPE];
 	id context = [dictionary valueForKey:GROWL_NOTIFICATION_CLICK_CONTEXT];
@@ -55,7 +58,7 @@
 		//Go ahead and set it regardless
 		contextString = context;
 	}else{
-		if([contextType caseInsensitiveCompare:@"PLIST"] == NSOrderedSame){
+/*		if([contextType caseInsensitiveCompare:@"PLIST"] == NSOrderedSame){
 			if([NSPropertyListSerialization propertyList:context isValidForFormat:kCFPropertyListXMLFormat_v1_0]){
 				NSData *propertyListData = [NSPropertyListSerialization dataWithPropertyList:context
 																											 format:kCFPropertyListXMLFormat_v1_0
@@ -68,12 +71,12 @@
 			if(!contextString){
 				NSLog(@"Error generating context string from supposed plist: %@\r\n", context);
 			}
-		}
+		}*/
 	}
 	if(contextString){
 		//If we can't get a context formed into a string, this isn't worth sending
-		[response appendFormat:@"Notification-Callback-Context-Type: %@\r\n", contextType];
-		[response appendFormat:@"Notification-Callback-Context: %@\r\n", contextString];
+		[response appendFormat:@"%@: %@\r\n", GrowlGNTPNotificationCallbackContextType, contextType];
+		[response appendFormat:@"%@: %@\r\n", GrowlGNTPNotificationCallbackContext, contextString];
 		[response appendString:@"\r\n\r\n"];
 		//NSLog(@"%@", response);
 		feedbackData = [NSData dataWithBytes:[response UTF8String] length:[response length]];
@@ -112,7 +115,7 @@
 +(NSMutableDictionary*)gntpDictFromGrowlDict:(NSDictionary *)dict {
 	NSMutableDictionary *converted = [super gntpDictFromGrowlDict:dict];
 	
-	//We wont bother checking the context type we stored unless its a string
+	//We wont bother checking the context type we stored unless the context is not stored as a string
 	NSString *contextType = nil;
 	id context = [dict objectForKey:GROWL_NOTIFICATION_CLICK_CONTEXT];
 	NSString *contextString = nil;
@@ -123,13 +126,16 @@
 				contextType = [dict objectForKey:GROWL_NOTIFICATION_CLICK_CONTENT_TYPE];
 			else
 				contextType = @"String";
-		}else if([NSPropertyListSerialization propertyList:context isValidForFormat:kCFPropertyListXMLFormat_v1_0]){
+		}else if([NSPropertyListSerialization propertyList:context isValidForFormat:NSPropertyListXMLFormat_v1_0]){
+			NSError *error = nil;
 			NSData *plistData = [NSPropertyListSerialization dataWithPropertyList:context
-                                                                        format:kCFPropertyListXMLFormat_v1_0
+                                                                        format:NSPropertyListXMLFormat_v1_0
                                                                        options:0
-                                                                         error:NULL];
+                                                                         error:&error];
 			if(plistData){
 				contextString = [[[NSString alloc] initWithData:plistData encoding:NSUTF8StringEncoding] autorelease];
+			}else{
+				NSLog(@"There was an error: %@ generating serialized property list from context: %@", error, context);
 			}
 			contextType = @"Plist";
 		}else if([context isKindOfClass:[NSURL class]]){
@@ -139,6 +145,8 @@
 		if(contextString && contextType){
 			[converted setObject:contextType forKey:GrowlGNTPNotificationCallbackContextType];
 			[converted setObject:contextString forKey:GrowlGNTPNotificationCallbackContext];
+		}else{
+			NSLog(@"Context %@ was not converted to a string, and was not sent, check that it is an NSString, NSURL or is seriazable to XML PList with NSPropertyListSerialization", context);
 		}
 	}
 	
@@ -178,7 +186,7 @@
 		id convertedContext = nil;
 		if(self.callbackType){
 			//We can easily add support here for other types
-			if([self.callbackType caseInsensitiveCompare:@"PLIST"] == NSOrderedSame){
+/*			if([self.callbackType caseInsensitiveCompare:@"PLIST"] == NSOrderedSame){
 				//Convert to a plist and check
 				convertedContext = [NSPropertyListSerialization propertyListWithData:[self.callbackString dataUsingEncoding:NSUTF8StringEncoding]
 																								 options:0
@@ -186,7 +194,7 @@
 																									error:nil];
 			}else if([self.callbackType caseInsensitiveCompare:@"URL"] == NSOrderedSame){
 				convertedContext = [NSURL URLWithString:self.callbackString];
-			}
+			}*/
 		}
 		
 		//We dont really know the type, or couldn't convert it, just the stuff the string back in

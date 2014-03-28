@@ -23,6 +23,8 @@
 @property(readonly, nonatomic, copy) NSString* displayString;
 @property(readonly, nonatomic, STRONG) NSString* lookupKey;
 
++(NSDictionary*)tokenMap;
++(FormattingToken*)tokenWithEditingString:(NSString*)token;
 -(id)initWithEditingString:(NSString*)editingString;
 
 @end

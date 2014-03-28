@@ -1,0 +1,12 @@
+GrowlTunes 3.0
+- Adds keyboard Shortcuts for controlling your music.
+- You can now run GrowlTunes in the background.
+- You can format what fields show up in notifications.
+- Note - Artwork icons requires Growl on 10.8. Notification Center does not allow for custom icons.
+
+
+GrowlTunes 2.1.1
+- Improves memory resource usage by updating the Growl framework.
+
+GrowlTunes 2.1
+- Adds support for OS X notification center on 10.8.

@@ -11,6 +11,7 @@
 #import "GrowlNotification.h"
 #import "GrowlNetworkUtilities.h"
 #import "GNTPSubscriptionController.h"
+#import "GrowlDefines.h"
 
 @interface GrowlTCPPathway ()
 @property (nonatomic, retain) GNTPServer *localServer;
@@ -43,6 +44,16 @@
 																		 [self.localServer notificationClicked:growlDict];
 																		 [self.remoteServer notificationClicked:growlDict];
 																	 }];
+
+		[[NSNotificationCenter defaultCenter] addObserverForName:@"GROWL_NOTIFICATION_CLOSED"
+																		  object:nil
+																			queue:[NSOperationQueue mainQueue]
+																	 usingBlock:^(NSNotification *note) {
+																		 GrowlNotification *growlNote = [note object];
+																		 NSDictionary *growlDict = [growlNote dictionaryRepresentation];
+																		 [self.localServer notificationClosed:growlDict];
+																		 [self.remoteServer notificationClosed:growlDict];
+																	 }];      
 		[[NSNotificationCenter defaultCenter] addObserverForName:GROWL_NOTIFICATION_TIMED_OUT
 																		  object:nil
 																			queue:[NSOperationQueue mainQueue]
@@ -106,7 +117,7 @@
 																			type:@"_gntp._tcp." 
 																			name:publishingName 
 																			port:GROWL_TCP_PORT] autorelease];
-      NSDictionary * txtRecordDataDictionary = [NSDictionary dictionaryWithObjectsAndKeys: @"1.0", @"version", @"mac", @"platform", nil];
+      NSDictionary * txtRecordDataDictionary = [NSDictionary dictionaryWithObjectsAndKeys: @"1.0", @"version", @"mac", @"platform", @"13", @"websocket", nil];
       [self.netService setTXTRecordData:[NSNetService dataFromTXTRecordDictionary:txtRecordDataDictionary]];
       [self.netService publish];
    }
@@ -124,15 +135,22 @@
  
 #pragma mark GNTPServerDelegate
 
-- (void)registerWithDictionary:(NSDictionary *)dictionary {
+- (void)server:(GNTPServer*)server registerWithDictionary:(NSDictionary *)dictionary {
 	[super registerApplicationWithDictionary:dictionary];
 }
 
-- (GrowlNotificationResult)notifyWithDictionary:(NSDictionary *)dictionary {
+- (GrowlNotificationResult)server:(GNTPServer*)server notifyWithDictionary:(NSDictionary *)dictionary {
+   if([server isEqual:self.remoteServer]){
+      NSMutableArray *keys = [[dictionary allKeys] mutableCopy];
+      [keys removeObject:GROWL_NOTIFICATION_ALREADY_SHOWN];
+      dictionary = [dictionary dictionaryWithValuesForKeys:keys];
+      [keys release];
+   }
+   
 	return [super resultOfPostNotificationWithDictionary:dictionary];
 }
 
--(void)subscribeWithDictionary:(GNTPSubscribePacket*)packet {
+-(void)server:(GNTPServer*)server subscribeWithDictionary:(GNTPSubscribePacket*)packet {
 	[[GNTPSubscriptionController sharedController] addRemoteSubscriptionFromPacket:packet];
 }
 

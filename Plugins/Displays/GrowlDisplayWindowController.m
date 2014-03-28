@@ -99,8 +99,8 @@ static NSMutableDictionary *existingInstances;
 		self.occupiedRect = CGRectZero;
 		windowTransitions = [[NSMutableDictionary alloc] init];
 		ignoresOtherNotifications = NO;
-		startTimes = NSCreateMapTable(NSObjectMapKeyCallBacks, NSIntegerMapValueCallBacks, 0U);
-		endTimes = NSCreateMapTable(NSObjectMapKeyCallBacks, NSIntegerMapValueCallBacks, 0U);
+		startTimes = NSCreateMapTable(NSObjectMapKeyCallBacks, NSObjectMapValueCallBacks, 0U);
+		endTimes = NSCreateMapTable(NSObjectMapKeyCallBacks, NSObjectMapValueCallBacks, 0U);
 		transitionDuration = DEFAULT_TRANSITION_DURATION;
 
 		//Show notifications on all Spaces
@@ -118,6 +118,7 @@ static NSMutableDictionary *existingInstances;
 - (void) dealloc {
 	[self setDelegate:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
+   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
 	
 	[self stopAllTransitions];
 
@@ -138,9 +139,7 @@ static NSMutableDictionary *existingInstances;
 #pragma mark Screenshot mode
 
 - (void) takeScreenshot {
-	//NSView *view = [[self window] contentView];
-	//NSString *path = [[[GrowlPathUtilities screenshotsDirectory] stringByAppendingPathComponent:[GrowlPathUtilities nextScreenshotName]] stringByAppendingPathExtension:@"png"];
-	//[[view dataWithPNGInsideRect:[view frame]] writeToFile:path atomically:NO];
+	//Deprecated no-op
 }
 
 #pragma mark -
@@ -202,6 +201,13 @@ static NSMutableDictionary *existingInstances;
 	}
 }
 
+- (void) clickedCloseBox {
+   didClick = YES;
+   [[NSNotificationCenter defaultCenter] postNotificationName:@"GROWL_NOTIFICATION_CLOSED"
+                                                       object:[self notification]];
+   
+   [self clickedClose];
+}
 - (void) clickedClose {
 	userRequestedClose = YES;
     displayStatus = GrowlDisplayOnScreenStatus;
@@ -279,9 +285,6 @@ static NSMutableDictionary *existingInstances;
 }
 
 - (void) didDisplayNotification {
-	if (screenshotModeEnabled)
-		[self takeScreenshot];
-
 	[[NSNotificationCenter defaultCenter] postNotificationName:GrowlDisplayWindowControllerDidDisplayWindowNotification
 														object:self];
 }
@@ -295,7 +298,7 @@ static NSMutableDictionary *existingInstances;
 - (void) didTakeDownNotification {
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	if (!didClick) {
-		[nc postNotificationName:GROWL_NOTIFICATION_TIMED_OUT object:[self notification] userInfo:nil];
+		[nc postNotificationName:GROWL_NOTIFICATION_TIMED_OUT object:[self notification]];
 	}
 	[nc postNotificationName:GrowlDisplayWindowControllerDidTakeWindowDownNotification object:self];
 }
@@ -346,8 +349,8 @@ static NSMutableDictionary *existingInstances;
 			  @"The end parameter was invalid for the transition: %@",
 			  transition);
 
-	NSMapInsert(startTimes, transition, (void *)start);
-	NSMapInsert(endTimes, transition, (void *)end);
+	[startTimes setObject:[NSNumber numberWithUnsignedInteger:start] forKey:transition ];
+	[endTimes setObject:[NSNumber numberWithUnsignedInteger:end] forKey:transition ];
 }
 
 #pragma mark-
@@ -397,8 +400,10 @@ static NSMutableDictionary *existingInstances;
 }
 
 - (BOOL) startTransition:(GrowlWindowTransition *)transition {
-	NSInteger startPercentage = (NSInteger) NSMapGet(startTimes, transition);
-	NSInteger endPercentage   = (NSInteger) NSMapGet(endTimes, transition);
+    NSNumber *start = [startTimes objectForKey:transition];
+    NSNumber *end = [endTimes objectForKey:transition];
+	NSUInteger startPercentage = [start unsignedIntegerValue];
+	NSUInteger endPercentage   = [end unsignedIntegerValue];
 
 	// If there were no times set up then the end time would be NULL (0)...
 	if (endPercentage == 0)
@@ -503,16 +508,13 @@ static NSMutableDictionary *existingInstances;
 		[[NSNotificationCenter defaultCenter] removeObserver:self
 																		name:GROWL_CLOSE_NOTIFICATION
 																	 object:[[notification dictionaryRepresentation] objectForKey:GROWL_NOTIFICATION_INTERNAL_ID]];
-		
-		[notification release];
+      [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
+      [notification release];
 		notification = [theNotification retain];
 	}
 	
 	NSDictionary *noteDict = [theNotification dictionaryRepresentation];
-	
-	[self setScreenshotModeEnabled:[[noteDict objectForKey:GROWL_SCREENSHOT_MODE] boolValue]];
-	[self setClickHandlerEnabled:[noteDict objectForKey:GROWL_CLICK_HANDLER_ENABLED]];	
-	
+		
 	NSView *view = [[self window] contentView];
 	if ([view isKindOfClass:[GrowlNotificationView class]]) {
 		GrowlNotificationView *notificationView = (GrowlNotificationView *)view;
@@ -536,6 +538,11 @@ static NSMutableDictionary *existingInstances;
 														  selector:@selector(stopDisplay)
 																name:GROWL_CLOSE_NOTIFICATION
 															 object:[noteDict objectForKey:GROWL_NOTIFICATION_INTERNAL_ID]];
+   [[NSDistributedNotificationCenter defaultCenter] addObserver:self
+                                                       selector:@selector(stopDisplay)
+                                                           name:GROWL3_NOTIFICATION_CANCEL_REQUESTED
+                                                         object:[noteDict objectForKey:GROWL_NOTIFICATION_INTERNAL_ID]
+                                             suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
 }
 
 - (void) updateToNotification:(GrowlNotification *)theNotification {
@@ -630,14 +637,11 @@ static NSMutableDictionary *existingInstances;
 #pragma mark -
 
 - (NSNumber *) clickHandlerEnabled {
-	return clickHandlerEnabled;
+	return @YES;
 }
 
 - (void) setClickHandlerEnabled:(NSNumber *)flag {
-	if (flag != clickHandlerEnabled) {
-		[clickHandlerEnabled release];
-		clickHandlerEnabled = [flag retain];
-	}
+	//deprecated no-op
 }
 
 #pragma mark -

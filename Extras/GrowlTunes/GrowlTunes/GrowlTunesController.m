@@ -8,41 +8,30 @@
 
 #import "defines.h"
 #import "GrowlTunesController.h"
+#import "GrowlTunesFormattingController.h"
+#import "GrowlTunesPreferencesWindowController.h"
 #import "iTunes+iTunesAdditions.h"
 #import "ITunesConductor.h"
 #import "FormattedItemViewController.h"
 #import "TrackRatingLevelIndicatorValueTransformer.h"
 #import "StartAtLoginController.h"
-#import "DDTTYLogger.h"
-#import "DDASLLogger.h"
-#import "DispatchQueueLogFormatter.h"
+#import "GrowlLocalizedStringsController.h"
+
+#import "SGHotKeyCenter.h"
+#import "SGHotKey.h"
+#import "SGKeyCombo.h"
 
 @interface GrowlTunesController ()
 
 @property(readwrite, STRONG, nonatomic) IBOutlet ITunesConductor* conductor;
 @property(readonly, assign, nonatomic) BOOL noMeansNo;
-@property(readwrite, STRONG, nonatomic) id <DDLogFormatter> formatter;
 @property(readwrite, STRONG, nonatomic) StartAtLoginController* loginController;
-
-@property(readonly, STRONG, nonatomic) NSString* stringPlayPause;
-@property(readonly, STRONG, nonatomic) NSString* stringNextTrack;
-@property(readonly, STRONG, nonatomic) NSString* stringPreviousTrack;
-@property(readonly, STRONG, nonatomic) NSString* stringRating;
-@property(readonly, STRONG, nonatomic) NSString* stringVolume;
-@property(readonly, STRONG, nonatomic) NSString* stringBringITunesToFront;
-@property(readonly, STRONG, nonatomic) NSString* stringQuitBoth;
-@property(readonly, STRONG, nonatomic) NSString* stringQuitITunes;
-@property(readonly, STRONG, nonatomic) NSString* stringQuitGrowlTunes;
-@property(readonly, STRONG, nonatomic) NSString* stringStartITunes;
-@property(readonly, STRONG, nonatomic) NSString* stringNotifyWithITunesActive;
-@property(readonly, STRONG, nonatomic) NSString* stringConfigureFormatting;
 
 - (void)notifyWithTitle:(NSString*)title
             description:(NSString*)description
                    name:(NSString*)name
-                   icon:(NSData*)icon;
-
-- (void)populateLoggingMenu;
+                   icon:(NSData*)icon
+				 identifier:(NSString*)identifier;
 
 #if defined(BETA)
 - (NSCalendarDate *)dateWithString:(NSString *)str;
@@ -60,158 +49,113 @@
 @synthesize statusItemMenu = _statusItemMenu;
 @synthesize currentTrackMenuItem = _currentTrackMenuItem;
 @synthesize currentTrackController = _currentTrackController;
-@synthesize loggingMenu = _loggingMenu;
-@synthesize formatter = _formatter;
 @synthesize loginController = _loginController;
-
-
-static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
-
-+ (int)ddLogLevel
-{
-    return ddLogLevel;
-}
-
-+ (void)ddSetLogLevel:(int)logLevel
-{
-    ddLogLevel = logLevel;
-}
+@synthesize localizedStringsController = _localizedStringsController;
 
 + (void)initialize
 {
-    if (self == [GrowlTunesController class]) {
-        NSDictionary * defaults = 
-        [NSDictionary dictionaryWithContentsOfFile:
-         [[NSBundle mainBundle] pathForResource:@"defaults" ofType:@"plist"]];
-        [[NSUserDefaults standardUserDefaults] registerDefaults: defaults];
-        
-        NSNumber *logLevel = [[NSUserDefaults standardUserDefaults] objectForKey:
-                              [NSString stringWithFormat:@"%@LogLevel", [self class]]];
-        if (logLevel)
-            ddLogLevel = [logLevel intValue];
-        
-        NSValueTransformer* trackRatingTransformer = [[TrackRatingLevelIndicatorValueTransformer alloc] init];
-        [NSValueTransformer setValueTransformer:trackRatingTransformer 
-                                        forName:@"TrackRatingLevelIndicatorValueTransformer"];
-        RELEASE(trackRatingTransformer);
-    }
+	if (self == [GrowlTunesController class]) {
+		NSString *defaultsPath = [[NSBundle mainBundle] pathForResource:@"defaults"
+																					ofType:@"plist"];
+		NSDictionary *defaultDefaults = [NSDictionary dictionaryWithContentsOfFile:defaultsPath];
+		
+		NSUserDefaults *helperAppDefaults = [NSUserDefaults standardUserDefaults];
+		[helperAppDefaults addSuiteNamed:@"com.growl.GrowlTunes"];
+		NSDictionary *existing = [helperAppDefaults persistentDomainForName:@"com.growl.GrowlTunes"];
+		if (existing) {
+			NSMutableDictionary *domain = [defaultDefaults mutableCopy];
+			[domain addEntriesFromDictionary:existing];
+			[helperAppDefaults setPersistentDomain:domain forName:@"com.growl.GrowlTunes"];
+			RELEASE(domain);
+		} else {
+			[helperAppDefaults setPersistentDomain:defaultDefaults forName:@"com.growl.GrowlTunes"];
+		}
+		[[NSUserDefaults standardUserDefaults] synchronize];
+				
+		NSValueTransformer* trackRatingTransformer = [[TrackRatingLevelIndicatorValueTransformer alloc] init];
+		[NSValueTransformer setValueTransformer:trackRatingTransformer
+												  forName:@"TrackRatingLevelIndicatorValueTransformer"];
+		RELEASE(trackRatingTransformer);
+	}
+}
+
+-(id)init {
+   if((self = [super init])){
+	   [NSApp setDelegate:self];
+	   _localizedStringsController = [[GrowlLocalizedStringsController alloc] init];
+	   _localizedStringsController.table = @"Localizable";
+	   _formatController = [[GrowlTunesFormattingController alloc] init];
+      self.conductor = AUTORELEASE([[ITunesConductor alloc] init]);
+   }
+   return self;
 }
 
 // NSMenuItem just doesn't seem to understand. bind title and suddenly no means yes. not cool, NSMenuItem.
 - (BOOL)noMeansNo
 { return NO; }
 
-- (NSString*)stringPlayPause
-{ return MenuPlayPause; }
-
-- (NSString*)stringNextTrack
-{ return MenuNextTrack; }
-
-- (NSString*)stringPreviousTrack
-{ return MenuPreviousTrack; }
-
-- (NSString*)stringRating
-{ return MenuRating; }
-
-- (NSString*)stringVolume
-{ return MenuVolume; }
-
-- (NSString*)stringBringITunesToFront
-{ return MenuBringITunesToFront; }
-
-- (NSString*)stringQuitBoth
-{ return MenuQuitBoth; }
-
-- (NSString*)stringQuitITunes
-{ return MenuQuitITunes; }
-
-- (NSString*)stringQuitGrowlTunes
-{ return MenuQuitGrowlTunes; }
-
-- (NSString*)stringStartITunes
-{ return MenuStartITunes; }
-
-- (NSString*)stringNotifyWithITunesActive
-{ return MenuNotifyWithITunesActive; }
-
-- (NSString*)stringConfigureFormatting
-{ return MenuConfigureFormatting; }
-
-- (NSString*)stringStartAtLogin
-{ return MenuStartAtLogin; }
-
 - (NSString*)applicationNameForGrowl
 { return @"GrowlTunes"; }
 
 - (NSDictionary*)registrationDictionaryForGrowl
-{    
-    NSDictionary* notifications = [NSDictionary dictionaryWithObjectsAndKeys:
-                                   NotifierChangedTracksReadable,   NotifierChangedTracks,
-                                   NotifierPausedReadable,          NotifierPaused,
-                                   NotifierStoppedReadable,         NotifierStopped,
-                                   NotifierStartedReadable,         NotifierStarted,
-                                   nil];
-    LogInfo(@"%@", notifications);
-    
-    NSArray* allNotifications = [notifications allKeys];
-    
-    NSURL* iconURL = [[NSBundle mainBundle] URLForImageResource:@"GrowlTunes"];
-    NSImage* icon = [[NSImage alloc] initByReferencingURL:iconURL];
-    
-    NSDictionary* regDict = [NSDictionary dictionaryWithObjectsAndKeys:
-                             @"GrowlTunes",             GROWL_APP_NAME,
-                             @"com.growl.growltunes",   GROWL_APP_ID,
-                             allNotifications,          GROWL_NOTIFICATIONS_ALL,
-                             allNotifications,          GROWL_NOTIFICATIONS_DEFAULT,
-                             notifications,             GROWL_NOTIFICATIONS_HUMAN_READABLE_NAMES,
-                             icon,                      GROWL_APP_ICON_DATA,
-                             nil];
-    
-    RELEASE(icon);
-    
-    return regDict;
+{
+	NSArray *allNotifications = @[formattingTypes, NotifierPaused, NotifierStopped];
+	NSArray *allReadable = @[[[self localizedStringsController] stringForKey:@"PodcastFormatTitle"],[[self localizedStringsController] stringForKey:@"StreamFormatTitle"],[[self localizedStringsController] stringForKey:@"ShowFormatTitle"],[[self localizedStringsController] stringForKey:@"MovieFormatTitle"],[[self localizedStringsController] stringForKey:@"MusicVideoFormatTitle"],[[self localizedStringsController] stringForKey:@"MusicFormatTitle"], NotifierPausedReadable, NotifierStoppedReadable];
+	NSArray *readableDict = [NSDictionary dictionaryWithObjects:allReadable forKeys:allNotifications];
+		
+	NSURL* iconURL = [[NSBundle mainBundle] URLForImageResource:@"GrowlTunes"];
+	NSData *iconData = [NSData dataWithContentsOfURL:iconURL];
+	
+	NSDictionary* regDict = @{GROWL_APP_NAME : @"GrowlTunes",
+										GROWL_APP_ID : @"com.growl.growltunes",
+										GROWL_NOTIFICATIONS_ALL : allNotifications,
+										GROWL_NOTIFICATIONS_DEFAULT : allNotifications,
+										GROWL_NOTIFICATIONS_HUMAN_READABLE_NAMES : readableDict,
+										GROWL_APP_ICON_DATA : iconData};
+		
+	return regDict;
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if ([keyPath isEqualToString:@"currentTrack"]) {
-        [_currentTrackMenuItem setView:nil];
-        
-        if (![self.conductor isPlaying]) return;
-        
-        NSDictionary* formatted = [[[self conductor] currentTrack] formattedDescriptionDictionary];
-        
-        if (!_currentTrackController) {
-            self.currentTrackController = AUTORELEASE([[FormattedItemViewController alloc] init]); 
-        }
-        [_currentTrackController setFormattedDescription:formatted];
-        [_currentTrackMenuItem setView:[_currentTrackController view]];
-                
-        NSString* title = [formatted valueForKey:@"title"];
-        NSString* description = [formatted valueForKey:@"description"];
-        NSData* iconData = [formatted valueForKey:@"icon"];
-        
-        [self notifyWithTitle:title description:description name:NotifierChangedTracks icon:iconData];
-    }
+	if ([keyPath isEqualToString:@"currentTrack"]) {
+		[_currentTrackMenuItem setView:nil];
+		
+		if (![self.conductor isPlaying]) return;
+		
+		NSDictionary* formatted = [[[self conductor] currentTrack] formattedDescriptionDictionary];
+		
+		if (!_currentTrackController) {
+			self.currentTrackController = AUTORELEASE([[FormattedItemViewController alloc] init]);
+		}
+		[_currentTrackController setFormattedDescription:formatted];
+		[_currentTrackMenuItem setView:[_currentTrackController view]];
+		
+		NSString* title = [formatted valueForKey:@"title"];
+		NSString* description = [formatted valueForKey:@"description"];
+		NSData* iconData = [formatted valueForKey:@"icon"];
+		NSString *type = [self.conductor.currentTrack typeDescription];
+		
+		[self notifyWithTitle:title description:description name:type icon:iconData identifier:self.conductor.currentTrack.persistentID];
+	}else if([keyPath isEqualToString:@"isPaused"]){
+		if([self.conductor isPaused])
+			[self notifyWithTitle:NotifierPausedReadable description:@"" name:NotifierPaused icon:nil identifier:self.conductor.currentTrack.persistentID];
+	}else if ([keyPath isEqualToString:@"isStopped"]){
+		if([self.conductor isStopped]){
+			[self notifyWithTitle:NotifierStoppedReadable description:@"" name:NotifierStopped icon:nil identifier:self.conductor.currentTrack.persistentID];
+		}
+	}
+	else if ([keyPath isEqualToString:@"currentTrack.rating"])
+	{
+		NSDictionary* formatted = [[[self conductor] currentTrack] formattedDescriptionDictionary];
+		[_currentTrackController setFormattedDescription:formatted];
+	}
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification*)aNotification
 {
 #pragma unused(aNotification)
-    
-    self.formatter = [[DispatchQueueLogFormatter alloc] init];
-    
-    [DDLog addLogger:[DDTTYLogger sharedInstance]];
-    [[DDTTYLogger sharedInstance] setLogFormatter:self.formatter];
-#if !defined(DEBUG)
-    [DDLog addLogger:[DDASLLogger sharedInstance]];
-    [[DDASLLogger sharedInstance] setLogFormatter:self.formatter];
-#endif
-#if defined(NSLOGGER)
-    [DDLog addLogger:[DDNSLogger sharedInstance]];
-    [[DDNSLogger sharedInstance] setLogFormatter:self.formatter];
-#endif
-    
+       
     [GrowlApplicationBridge setGrowlDelegate:self];
     [GrowlApplicationBridge setShouldUseBuiltInNotifications:YES];
     
@@ -226,7 +170,6 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
         NSString* fscript = [frameworks stringByAppendingPathComponent:@"FScript.framework"];
         loaded = [[NSBundle bundleWithPath:fscript] load];
         if (loaded) {
-            LogVerbose(@"loaded FScript from framework at path: %@", fscript);
             *stop = loaded;
         }
     }];
@@ -258,143 +201,135 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
 #pragma unused(aNotification)
-    
-    LogVerbose(@"GrowlTunes launched");
-    
+        
 #if defined(BETA)
     [self expiryCheck];
 #endif
-    
-    [self createStatusItem];
-    
+	
+	NSNumber *visibility = [[NSUserDefaults standardUserDefaults] objectForKey:@"Visibility"];
+	if(visibility == nil || [visibility integerValue] == kShowIconInDock || [visibility integerValue] == kShowIconInBoth){
+		[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+	}
+	
+	if(visibility == nil || [visibility integerValue] == kShowIconInMenu || [visibility integerValue] == kShowIconInBoth){
+		[self createStatusItem];
+	}
+	    
     if (!_iTunesConductor) { self.conductor = AUTORELEASE([[ITunesConductor alloc] init]); }
     [self.conductor addObserver:self forKeyPath:@"currentTrack" options:NSKeyValueObservingOptionInitial context:nil];
+    [self.conductor addObserver:self forKeyPath:@"currentTrack.rating" options:NSKeyValueObservingOptionInitial context:nil];
+	[self.conductor addObserver:self forKeyPath:@"isPaused" options:NSKeyValueObservingOptionInitial context:nil];
+	[self.conductor addObserver:self forKeyPath:@"isStopped" options:NSKeyValueObservingOptionInitial context:nil];
+	
+	[self setupHotKeys];
+}
+
+- (BOOL) applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag {
+	if(!flag){
+		[self configureFormatting:nil];
+	}
+	return YES;
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification {
+	[self.formatController saveTokens];
+}
+
+- (NSMenu*)applicationDockMenu:(NSApplication *)sender {
+	NSMenu *statusMenu = [self.statusItemMenu copy];
+	NSMutableSet *toRemove = [NSMutableSet set];
+	[[statusMenu itemArray] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		if([obj isHidden]){
+			[toRemove addObject:obj];
+		}
+		NSString *title = [obj title];
+		if([title isEqualToString:MenuRating] ||
+			[title isEqualToString:MenuVolume]){
+			[toRemove addObject:obj];
+		}
+	}];
+	/* Bindings aren't honored, so we remove all hidden and unusuable items */
+	[toRemove enumerateObjectsUsingBlock:^(id obj, BOOL *stop) {
+		[statusMenu removeItem:obj];
+	}];
+	return statusMenu;
 }
 
 -(void)dealloc
 {
+    [self.conductor removeObserver:self forKeyPath:@"currentTrack.rating"];
     [self.conductor removeObserver:self forKeyPath:@"currentTrack"];
+	[self.conductor removeObserver:self forKeyPath:@"isPaused"];
+	[self.conductor removeObserver:self forKeyPath:@"isStopped"];
     RELEASE(_iTunesConductor);
     RELEASE(_statusItemMenu);
     RELEASE(_currentTrackMenuItem);
     RELEASE(_currentTrackController);
     RELEASE(_statusItem);
     RELEASE(_formatwc);
-    RELEASE(_formatter);
     SUPER_DEALLOC;
+}
+
+- (void) growlNotificationWasClicked:(id)clickContext
+{
+	ITunesSource *source = [[[[self.conductor sources] get] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"kind == %i", ITunesESrcLibrary]] objectAtIndex:0];
+	NSArray *playlists = [[source playlists] get];
+    
+	__block NSMutableArray *tracks = [NSMutableArray array];
+	__block ITunesPlaylist *trackPlaylist = nil;
+	[playlists enumerateObjectsUsingBlock:^(ITunesPlaylist *playlist, NSUInteger idx, BOOL *stop) {
+		NSPredicate *predicate = [NSPredicate predicateWithFormat:@"persistentID == %@", clickContext];
+		SBElementArray *possibleTracks = [playlist tracks];
+		[possibleTracks filterUsingPredicate:predicate];
+
+		if([possibleTracks count] && ![playlist.name isEqualToString:@"Library"])
+		{
+			[tracks addObjectsFromArray:[possibleTracks get]];
+			trackPlaylist = playlist;
+			*stop = YES;
+		}
+	}];
+
+	if([tracks count] > 0)
+	{
+		[self.conductor activate:self];
+		[self.conductor revealTrack:[tracks objectAtIndex:0U] fromPlaylist:trackPlaylist];
+	}
 }
 
 - (void)notifyWithTitle:(NSString*)title
             description:(NSString*)description
                    name:(NSString*)name
                    icon:(NSData*)icon
+			 identifier:(NSString*)identifier
 {
-    BOOL notifyWhenFrontmost = [[NSUserDefaults standardUserDefaults] boolForKey:NOTIFY_ITUNES_FRONTMOST];
-    
-    if (!notifyWhenFrontmost && [self.conductor isFrontmost]) {
-        LogInfo(@"Not growling: iTunes is frontmost");
-        return;
-    }
-    
-    [GrowlApplicationBridge notifyWithTitle:title
-                                description:description
-                           notificationName:name
-                                   iconData:icon
-                                   priority:0
-                                   isSticky:FALSE
-                               clickContext:nil
-                                 identifier:name];
-}
-
-- (void)populateLoggingMenu
-{
-    NSMenu* loggingMenu = self.loggingMenu;
-    [loggingMenu removeAllItems];
-    
-    NSArray* logLevelNumbers = [NSArray arrayWithObjects:
-                                $num(DDNS_LOG_LEVEL_ERROR),
-                                $num(DDNS_LOG_LEVEL_WARN),
-                                $num(DDNS_LOG_LEVEL_INFO),
-                                $num(DDNS_LOG_LEVEL_VERBOSE),
-                                $num(DDNS_LOG_LEVEL_DEBUG),
-                                nil];
-    NSArray* logLevelNames = [NSArray arrayWithObjects: @"Error", @"Warning", @"Info", @"Verbose", @"Debug", nil];
-    NSDictionary* logLevels = [NSDictionary dictionaryWithObjects:logLevelNumbers forKeys:logLevelNames];
-    id menuTarget = self;
-    
-    void (^handleLogLevels)(NSString*, NSMenu*);
-    handleLogLevels = ^(NSString* className, NSMenu* classMenu) {        
-        @autoreleasepool {
-            if (!className) className = @"All";
-            id class = [className isEqualToString:@"All"] ? nil : NSClassFromString(className);
-
-            NSNumber* currentLogLevel = class ? $num([DDLog logLevelForClass:class]) : $num(-1);
-            
-            for (NSString* levelName in logLevelNames) {
-                NSMenuItem* levelItem = [[NSMenuItem alloc] initWithTitle:levelName 
-                                                                   action:@selector(setLoggingLevel:) 
-                                                            keyEquivalent:@""];
-                [levelItem setTarget:menuTarget];
-                
-                NSNumber* levelNumber = [logLevels objectForKey:levelName];
-                BOOL enabled = [levelNumber isEqualToNumber:currentLogLevel];
-                [levelItem setState:enabled];
-                
-                NSDictionary* data = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      (class ? class : [NSNull null]),  @"class",
-                                      levelName,                        @"levelName",
-                                      levelNumber,                      @"level",
-                                      nil];
-                [levelItem setRepresentedObject:data];
-                
-                [classMenu addItem:levelItem];
-                AUTORELEASE(levelItem);
-            }
-        }
-    };
-    
-    NSMutableArray* configurableClasses = [[DDLog registeredClasses] mutableCopy];
-    [configurableClasses insertObject:[NSNull null] atIndex:0];
-    AUTORELEASE(configurableClasses);
-    
-    for (Class configurableClass in configurableClasses) {
-        @autoreleasepool {
-            NSString* className = (configurableClass != [NSNull null]) ? NSStringFromClass(configurableClass) : @"All";
-            
-            NSMenuItem* classItem = [[NSMenuItem alloc] initWithTitle:className 
-                                                               action:NULL 
-                                                        keyEquivalent:@""];
-            [loggingMenu addItem:classItem];
-            AUTORELEASE(classItem);
-            
-            NSMenu* classMenu = [[NSMenu alloc] initWithTitle:className];
-            [classItem setSubmenu:classMenu];
-            AUTORELEASE(classMenu);
-            
-            handleLogLevels(className, classMenu);
-        }
-    }
-}
-
-- (void)setLoggingLevel:(id)sender
-{
-    NSDictionary* data = [(NSMenuItem*)sender representedObject];
-    if (!data) return;
-    
-    NSNumber* level = [data objectForKey:@"level"];
-    NSString* name = [data objectForKey:@"levelName"];
-    id class = [data objectForKey:@"class"];
-    
-    if (class == [NSNull null]) {
-        NSArray* classes = [DDLog registeredClasses];
-        for (Class _class in classes) {
-            [DDLog setLogLevel:[level intValue] forClass:_class];
-            LogInfo(@"Setting log level for class %@ to %@", NSStringFromClass(_class), name);
-        }
-    } else {
-        [DDLog setLogLevel:[level intValue] forClass:class];
-        LogInfo(@"Setting log level for class %@ to %@", NSStringFromClass(class), name);
-    }
+	BOOL notifyWhenFrontmost = [[NSUserDefaults standardUserDefaults] boolForKey:NOTIFY_ITUNES_FRONTMOST];
+	
+	if (!notifyWhenFrontmost && [self.conductor isFrontmost]) {
+		return;
+	}
+	
+	BOOL enabled = NO;
+	if([name isEqualToString:NotifierPaused]){
+		enabled = [[NSUserDefaults standardUserDefaults] boolForKey:NOTIFY_ON_PAUSE];
+	}else if([name isEqualToString:NotifierStopped]){
+		enabled = [[NSUserDefaults standardUserDefaults] boolForKey:NOTIFY_ON_STOP];
+	}else if([name isEqualToString:@"error"]){
+		enabled = NO;
+	}else{
+		enabled = [_formatController isFormatTypeEnabled:name];
+	}
+	if(!enabled)
+		return;
+	
+	[GrowlApplicationBridge notifyWithTitle:title
+										 description:description
+								  notificationName:name
+											 iconData:icon
+											 priority:0
+											 isSticky:FALSE
+										clickContext:identifier
+										  identifier:name];
 }
 
 - (void)createStatusItem
@@ -407,38 +342,34 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
             [_statusItem setImage:[NSImage imageNamed:@"GrowlTunes-Template.pdf"]];
             [_statusItem setHighlightMode:YES];
             [_statusItem setAction:@selector(openMenu:)];
+			[_statusItem sendActionOn:NSLeftMouseDownMask];
             [_statusItem setTarget:self];
 //            [_statusItem setMenu:self.statusItemMenu];
         }
     }
 }
 
+- (void)destroyStatusItem
+{
+	if(_statusItem) {
+		[[NSStatusBar systemStatusBar] removeStatusItem:_statusItem];
+		RELEASE(_statusItem);
+		_statusItem = nil;
+	}
+}
+
 - (void)openMenu:(id)sender
 {
 #pragma unused(sender)
     
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"enableLoggingConfiguration"]) {
-        LogVerbose(@"populating logging menu");
-        [self populateLoggingMenu];
-    }
-    
-    LogVerbose(@"popUpStatusItemMenu:");
     [_statusItem popUpStatusItemMenu:self.statusItemMenu];
-}
-
-- (void)removeStatusItem
-{    
-    if (_statusItem) {
-        [[NSStatusBar systemStatusBar] removeStatusItem:_statusItem];
-        RELEASE(_statusItem);
-    }
 }
 
 - (IBAction)configureFormatting:(id)sender
 {
 #pragma unused(sender)
     if (!_formatwc) {
-        _formatwc = [[NSWindowController alloc] initWithWindowNibName:@"FormattingPreferences"];
+        _formatwc = [[GrowlTunesPreferencesWindowController alloc] initWithWindowNibName:@"GrowlTunesPrefs"];
     }
     [NSApp activateIgnoringOtherApps:YES];
     [_formatwc showWindow:self];
@@ -451,6 +382,28 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
     [NSApp terminate:self];
 }
 
+- (IBAction)quitWithWarning:(id)sender
+{
+	if(![[NSUserDefaults standardUserDefaults] boolForKey:@"HideQuitWarning"])
+	{
+		NSAlert *alert = [NSAlert alertWithMessageText:NSLocalizedString(@"Are you sure you want to quit?", nil)
+										 defaultButton:NSLocalizedString(@"Yes", nil)
+									   alternateButton:NSLocalizedString(@"No", nil)
+										   otherButton:nil
+							 informativeTextWithFormat:NSLocalizedString(@"If you quit GrowlTunes you will no longer receive iTunes notifications.", nil)];
+		[alert setShowsSuppressionButton:YES];
+		
+		NSInteger result = [alert runModal];
+		if(result == NSOKButton)
+		{
+			[[NSUserDefaults standardUserDefaults] setBool:(BOOL)[[alert suppressionButton] state] forKey:@"HideQuitWarning"];
+			[NSApp terminate:self];
+		}
+	}
+	else
+		[NSApp terminate:self];
+}
+
 - (IBAction)quitGrowlTunesAndITunes:(id)sender
 {
 #pragma unused(sender)
@@ -458,6 +411,70 @@ static int ddLogLevel = DDNS_LOG_LEVEL_DEFAULT;
     [NSApp terminate:self];
 }
 
+- (void)setupHotKeys
+{
+	NSArray *hotKeys = @[NowPlayingHotKeyIdentifier, VolumeUpHotKeyIdentifier, VolumeDownHotKeyIdentifier, NextTrackHotKeyIdentifier, PreviousTrackHotKeyIdentifier, PlayPauseHotKeyIdentifier, ActivateHotKeyIdentifier];
+	NSArray *actions = @[@"nowPlaying:", @"volumeUp:", @"volumeDown:", @"nextTrack:", @"previousTrack:", @"playPause:", @"activateItunes:"];
+	[hotKeys enumerateObjectsUsingBlock:^(NSString *identifier, NSUInteger idx, BOOL *stop)
+	{
+		NSDictionary *plist = [[NSUserDefaults standardUserDefaults] objectForKey:identifier];
+		if(plist)
+		{
+			SGKeyCombo *combo = [[SGKeyCombo alloc] initWithPlistRepresentation:plist];
+			if(([combo keyCode] != -1) && ([combo modifiers] != -1))
+			{
+				combo.modifiers = SRCocoaToCarbonFlags(combo.modifiers);
+				SGHotKey *hotKey = [[SGHotKey alloc] initWithIdentifier:identifier keyCombo:combo target:self action:NSSelectorFromString([actions objectAtIndex:idx])];
+				[[SGHotKeyCenter sharedCenter] registerHotKey:hotKey];
+			}
+		}
+	}];
+}
+
+#pragma mark Pass through from UI to conductor
+
+- (IBAction)quitItunes:(id)sender {
+	[self.conductor quit:sender];
+}
+
+- (IBAction)runiTunes:(id)sender {
+	[self.conductor runiTunes:sender];
+}
+
+- (IBAction)playPause:(id)sender {
+	[self.conductor playPause:sender];
+}
+
+- (IBAction)nextTrack:(id)sender {
+	[self.conductor nextTrack:sender];
+}
+
+- (IBAction)previousTrack:(id)sender {
+	[self.conductor previousTrack:sender];
+}
+
+- (IBAction)activateItunes:(id)sender {
+	[self.conductor activate:sender];
+}
+
+- (IBAction)nowPlaying:(id)sender {
+	[self.conductor willChangeValueForKey:@"currentTrack"];
+	[self.conductor didChangeValueForKey:@"currentTrack"];
+}
+
+- (IBAction)volumeUp:(id)sender {
+	NSInteger newVolume = [[self.conductor volume] integerValue];
+	newVolume+=10;
+	newVolume= MIN(newVolume, 100);
+	[self.conductor setVolume:[NSNumber numberWithInteger:newVolume]];
+}
+
+- (IBAction)volumeDown:(id)sender {
+	NSInteger newVolume = [[self.conductor volume] integerValue];
+	newVolume-=10;
+	newVolume= MAX(newVolume, 0);
+	[self.conductor setVolume:[NSNumber numberWithInteger:newVolume]];
+}
 
 #if defined(BETA)
 - (NSCalendarDate *)dateWithString:(NSString *)str {

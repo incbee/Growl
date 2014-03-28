@@ -58,7 +58,7 @@
       __block NSMutableArray *theServices = [NSMutableArray array];
       __block GNTPForwarder *blockFowarder = self;
       [dests enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-         if([obj isKindOfClass:[NSDictionary dictionary]])
+         if(![obj isKindOfClass:[NSDictionary class]])
             return;
          
          GrowlBrowserEntry *entry = [[GrowlBrowserEntry alloc] initWithDictionary:obj];
@@ -231,6 +231,12 @@
 
 - (void)forwardDictionary:(NSDictionary*)dict isRegistration:(BOOL)registration toEntryIDs:(NSArray*)entryIDs {
    __block GNTPForwarder *blockForwarder = self;
+   if(!registration){
+      NSMutableArray *keys = [[dict allKeys] mutableCopy];
+      [keys removeObject:GROWL_NOTIFICATION_ALREADY_SHOWN];
+      dict = [dict dictionaryWithValuesForKeys:keys];
+      [keys release];
+   }
    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
       NSArray *sendingDetails = nil;
       if(!entryIDs || [entryIDs count] == 0){
@@ -425,6 +431,9 @@
 }
 - (void) notificationTimedOut:(GrowlCommunicationAttempt *)attempt context:(id)context {
 	//Send timeout
+}
+- (void) notificationClosed:(GrowlCommunicationAttempt *)attempt context:(id)context {
+   //send closed
 }
 
 @end

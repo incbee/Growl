@@ -60,7 +60,8 @@ enum {
 - (void) dealloc {
 	self.callbackHeaderItems = nil;
 	
-	[socket synchronouslySetDelegate:nil];
+	[socket setDelegate:nil];
+   [socket disconnect];
 	[socket release];
 	socket = nil;
 	
@@ -237,11 +238,11 @@ enum {
 					}else{
 						[self succeeded];
 						
-						[self readRestOfPacket:socket];
 						closeConnection = ![self expectsCallback];
 						if(!closeConnection){
+                     [self readRestOfPacket:socket];
 							[self readOneLineFromSocket:socket tag:GrowlGNTPCommAttemptReadPhaseFirstResponseLine];
-					}
+                  }
 					}
 				} else if ([responseType caseInsensitiveCompare:GrowlGNTPErrorResponseType] == NSOrderedSame) {            
 					/* We need to know what we are getting for an error, which is in a seperate header */
@@ -302,8 +303,8 @@ enum {
 
 - (BOOL)parseHeader:(NSString*)string {
 	//NSLog(@"%@", string);
-	NSString *headerKey = [GNTPPacket headerKeyFromHeader:string];
-	NSString *headerValue = [GNTPPacket headerValueFromHeader:string];
+	NSString *headerKey = [GNTPUtilities headerKeyFromHeader:string];
+	NSString *headerValue = [GNTPUtilities headerValueFromHeader:string];
 	if (headerKey && headerValue){
 		if(!callbackHeaderItems)
 			self.callbackHeaderItems = [NSMutableDictionary dictionary];
@@ -349,7 +350,7 @@ enum {
 	if(code){
 		GrowlGNTPErrorCode errCode = (GrowlGNTPErrorCode)[code integerValue];
 		if(errCode == GrowlGNTPUserDisabledErrorCode)
-			[self stopAttempts];
+			[self wasNotDisplayed];
 		if((errCode == GrowlGNTPUnknownApplicationErrorCode || 
 			 errCode == GrowlGNTPUnknownNotificationErrorCode) &&
 			[self isKindOfClass:NSClassFromString(@"GrowlGNTPNotificationAttempt")]){
@@ -394,26 +395,31 @@ enum {
    
    id clickContext = nil;
    
-   if([contextType caseInsensitiveCompare:@"PList"] == NSOrderedSame)
+   if([contextType caseInsensitiveCompare:@"PList"] == NSOrderedSame){
+		NSError *serializeError = nil;
       clickContext = [NSPropertyListSerialization propertyListWithData:[context dataUsingEncoding:NSUTF8StringEncoding] 
                                                                options:0
                                                                 format:NULL
-                                                                 error:NULL];
-   else
+                                                                 error:&serializeError];
+		if(serializeError)
+			NSLog(@"There was an error: %@ deserlializing the plist: %@", serializeError, context);
+	}else
       clickContext = context;
 	
    switch (resultValue) {
+      case 0:
+         //it timed out
+         if ([delegate respondsToSelector:@selector(notificationTimedOut:context:)])
+            [delegate notificationTimedOut:self context:clickContext];
       case 1:
          //it was clicked
          if ([delegate respondsToSelector:@selector(notificationClicked:context:)])
             [delegate notificationClicked:self context:clickContext];
          break;
       case 2:
-         //it closed, same as timed out
-      default:
-         if ([delegate respondsToSelector:@selector(notificationTimedOut:context:)])
-            [delegate notificationTimedOut:self context:clickContext];
-         //it timed out
+         //it was closed
+         if ([delegate respondsToSelector:@selector(notificationClosed:context:)])
+            [delegate notificationClosed:self context:clickContext];
          break;
    }
 }

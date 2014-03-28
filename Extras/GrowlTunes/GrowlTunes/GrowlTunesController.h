@@ -11,17 +11,23 @@
 #import <Growl/Growl.h>
 #import "macros.h"
 
-@class ITunesConductor, FormattedItemViewController, StartAtLoginController;
+typedef enum : NSInteger {
+	kShowIconInMenu = 0,
+	kShowIconInDock = 1,
+	kShowIconInBoth = 2,
+	kDontShowIcon = 3
+} GrowlTunesIconState;
 
-@interface GrowlTunesController : NSObject <GrowlApplicationBridgeDelegate, NSApplicationDelegate> {
+@class ITunesConductor, FormattedItemViewController, StartAtLoginController, GrowlTunesFormattingController;
+@class GrowlLocalizedStringsController;
+
+@interface GrowlTunesController : NSApplication <GrowlApplicationBridgeDelegate, NSApplicationDelegate> {
     ITunesConductor* _iTunesConductor;
     NSMenu* _statusItemMenu;
     NSMenuItem* _currentTrackMenuItem;
     FormattedItemViewController* _currentTrackController;
     NSStatusItem* _statusItem;
     NSWindowController* _formatwc;
-    NSMenu* _loggingMenu;
-    id <DDLogFormatter> _formatter;
     StartAtLoginController* _loginController;
 }
 
@@ -31,10 +37,13 @@
 @property(readwrite, STRONG, nonatomic) IBOutlet NSMenuItem* currentTrackMenuItem;
 @property(readwrite, STRONG, nonatomic) IBOutlet FormattedItemViewController* currentTrackController;
 @property(readwrite, STRONG, nonatomic) IBOutlet NSMenu* loggingMenu;
+@property(readonly, STRONG, nonatomic) GrowlTunesFormattingController *formatController;
+@property (readwrite, STRONG, nonatomic) GrowlLocalizedStringsController *localizedStringsController;
 
 - (IBAction)configureFormatting:(id)sender;
 - (IBAction)quitGrowlTunes:(id)sender;
 - (IBAction)quitGrowlTunesAndITunes:(id)sender;
 - (void)createStatusItem;
+- (void)destroyStatusItem;
 
 @end

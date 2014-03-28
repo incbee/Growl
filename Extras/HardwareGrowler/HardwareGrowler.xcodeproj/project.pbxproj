@@ -64,7 +64,6 @@
 		BC006CAF15AB161800643FA8 /* TimeMachine-Off.tif in Resources */ = {isa = PBXBuildFile; fileRef = BC006CAC15AB161600643FA8 /* TimeMachine-Off.tif */; };
 		BC006CB015AB161800643FA8 /* TimeMachine-On.tif in Resources */ = {isa = PBXBuildFile; fileRef = BC006CAD15AB161700643FA8 /* TimeMachine-On.tif */; };
 		BC4FC623155C04B700EE65EC /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = BC4FC622155C04B700EE65EC /* MainMenu.xib */; };
-		BC4FC628155C05C700EE65EC /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = BC4FC626155C05C700EE65EC /* Localizable.strings */; };
 		BC523C231555686000548427 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BCB805EB155153330088C69A /* Cocoa.framework */; };
 		BC523C291555686000548427 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = BC523C271555686000548427 /* InfoPlist.strings */; };
 		BC523C31155568A000548427 /* HWGrowlUSBMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = BC523C30155568A000548427 /* HWGrowlUSBMonitor.m */; };
@@ -74,7 +73,6 @@
 		BC5BF7F215752CEF0088443E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = BC5BF7F015752CEF0088443E /* InfoPlist.strings */; };
 		BC5BF7FA15752D4D0088443E /* HWGrowlKeyboardMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = BC5BF7F915752D4D0088443E /* HWGrowlKeyboardMonitor.m */; };
 		BC5BF8271576599F0088443E /* KeyboardMonitorPrefs.xib in Resources */ = {isa = PBXBuildFile; fileRef = BC5BF816157658810088443E /* KeyboardMonitorPrefs.xib */; };
-		BC602F4115880E6E005E174F /* HandsFreeDeviceSDPRecord.plist in Resources */ = {isa = PBXBuildFile; fileRef = BC602F4015880E6E005E174F /* HandsFreeDeviceSDPRecord.plist */; };
 		BC7300AB1554594900CCCA74 /* VolumeMonitorPrefs.xib in Resources */ = {isa = PBXBuildFile; fileRef = BC7300AA1554594900CCCA74 /* VolumeMonitorPrefs.xib */; };
 		BC75524F156528AA00CB0542 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BCB805EB155153330088C69A /* Cocoa.framework */; };
 		BC755255156528AA00CB0542 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = BC755253156528AA00CB0542 /* InfoPlist.strings */; };
@@ -121,6 +119,8 @@
 		BCB8076A1551A7510088C69A /* HWGrowlNetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = BCB807691551A7510088C69A /* HWGrowlNetworkMonitor.m */; };
 		BCB8076F1551A82B0088C69A /* HWGrowlPluginController.m in Sources */ = {isa = PBXBuildFile; fileRef = BCB8076E1551A82A0088C69A /* HWGrowlPluginController.m */; };
 		BCD4756A156BCDD000F81910 /* ACImageAndTextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = BCD47569156BCDD000F81910 /* ACImageAndTextCell.m */; };
+		BCE06FFB178CCAA700D7839A /* Growl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BCB80673155158DA0088C69A /* Growl.framework */; };
+		BCE06FFC178CCBF500D7839A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = BC4FC626155C05C700EE65EC /* Localizable.strings */; };
 		BCE3BC1C15C9619000B0BFFB /* TMSliderControl.m in Sources */ = {isa = PBXBuildFile; fileRef = BCE3BC1B15C9619000B0BFFB /* TMSliderControl.m */; };
 		BCE3BC2115C961A500B0BFFB /* OverlayMask.png in Resources */ = {isa = PBXBuildFile; fileRef = BCE3BC1D15C961A500B0BFFB /* OverlayMask.png */; };
 		BCE3BC2215C961A500B0BFFB /* SliderHandle.png in Resources */ = {isa = PBXBuildFile; fileRef = BCE3BC1E15C961A500B0BFFB /* SliderHandle.png */; };
@@ -363,6 +363,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8303BD331770A93200A18593 /* lv_LV */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = lv_LV; path = lv_LV.lproj/Localizable.strings; sourceTree = "<group>"; };
+		8303BD341770A94600A18593 /* zh_TW */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = zh_TW; path = zh_TW.lproj/Localizable.strings; sourceTree = "<group>"; };
 		832B24C815E492AE004FD493 /* nl */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		832B24C915E492BF004FD493 /* de */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		832B24CA15E492CF004FD493 /* es */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -372,7 +374,6 @@
 		832B24CF15E49308004FD493 /* da */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Localizable.strings; sourceTree = "<group>"; };
 		832B24D115E4931E004FD493 /* sk */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = sk; path = sk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		832B24D215E49326004FD493 /* es-MX */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = "es-MX"; path = "es-MX.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		832B24D315E49332004FD493 /* lv */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = lv; path = lv.lproj/Localizable.strings; sourceTree = "<group>"; };
 		832B24D415E4934A004FD493 /* el */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = el; path = el.lproj/Localizable.strings; sourceTree = "<group>"; };
 		832B24D515E49353004FD493 /* th */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = th; path = th.lproj/Localizable.strings; sourceTree = "<group>"; };
 		832B24D615E4935C004FD493 /* ru */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -528,7 +529,6 @@
 		BCB8076B1551A7820088C69A /* HardwareGrowlPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = HardwareGrowlPlugin.h; path = ../HardwareGrowler/HardwareGrowlPlugin.h; sourceTree = "<group>"; };
 		BCB8076D1551A82A0088C69A /* HWGrowlPluginController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = HWGrowlPluginController.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		BCB8076E1551A82A0088C69A /* HWGrowlPluginController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HWGrowlPluginController.m; sourceTree = "<group>"; };
-		BCC042EA15F0F146000E1768 /* pt */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
 		BCD47568156BCDD000F81910 /* ACImageAndTextCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ACImageAndTextCell.h; path = ../../../Common/Source/ACImageAndTextCell.h; sourceTree = "<group>"; };
 		BCD47569156BCDD000F81910 /* ACImageAndTextCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ACImageAndTextCell.m; path = ../../../Common/Source/ACImageAndTextCell.m; sourceTree = "<group>"; };
 		BCE3BC1A15C9619000B0BFFB /* TMSliderControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TMSliderControl.h; path = ../../../external_dependencies/tmslidercontrol/TMSliderControl.h; sourceTree = "<group>"; };
@@ -643,6 +643,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BCE06FFB178CCAA700D7839A /* Growl.framework in Frameworks */,
 				BCB807481551A6EA0088C69A /* Cocoa.framework in Frameworks */,
 				BCECA3681552D22100F49280 /* SystemConfiguration.framework in Frameworks */,
 			);
@@ -1331,6 +1332,7 @@
 				BC4FC625155C051E00EE65EC /* Generate Localizable.strings */,
 				BCB80697155159420088C69A /* Copy Frameworks */,
 				BCB805E5155153330088C69A /* Resources */,
+				93B9584016B4E93B00C85136 /* pt-BR link to pt */,
 				BCB807661551A6F40088C69A /* Copy Plugins */,
 				BCB806D015515D740088C69A /* Copy Launcher */,
 				BCB806961551591C0088C69A /* Growl XPC */,
@@ -1481,6 +1483,8 @@
 				"pt-PT",
 				pt,
 				ca,
+				lv_LV,
+				zh_TW,
 			);
 			mainGroup = BCB805DC155153330088C69A;
 			productRefGroup = BCB805E8155153330088C69A /* Products */;
@@ -1672,14 +1676,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BCE06FFC178CCBF500D7839A /* Localizable.strings in Resources */,
 				BCB805F6155153330088C69A /* InfoPlist.strings in Resources */,
 				BCB805FC155153330088C69A /* Credits.rtf in Resources */,
 				BCB8061D155154CA0088C69A /* HWGrowler.icns in Resources */,
 				BCB8061E155154CA0088C69A /* menubarIcon_Normal.png in Resources */,
 				BCB8061F155154CA0088C69A /* menubarIcon_Selected.png in Resources */,
 				BC4FC623155C04B700EE65EC /* MainMenu.xib in Resources */,
-				BC4FC628155C05C700EE65EC /* Localizable.strings in Resources */,
-				BC602F4115880E6E005E174F /* HandsFreeDeviceSDPRecord.plist in Resources */,
 				BC006C3215AB004900643FA8 /* HWGPrefsBluetooth.tif in Resources */,
 				BC006C3315AB004900643FA8 /* HWGPrefsCapster.tif in Resources */,
 				BC006C3415AB004900643FA8 /* HWGPrefsDefault.tif in Resources */,
@@ -1787,6 +1790,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		93B9584016B4E93B00C85136 /* pt-BR link to pt */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "pt-BR link to pt";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/usr/bin/env ruby";
+			shellScript = "resources = \"#{ENV[\"BUILT_PRODUCTS_DIR\"]}/#{ENV[\"UNLOCALIZED_RESOURCES_FOLDER_PATH\"]}\"\n`ln -sfh \"pt-BR.lproj\" \"#{resources}/pt.lproj\"`";
+			showEnvVarsInLog = 0;
+		};
 		BC4FC625155C051E00EE65EC /* Generate Localizable.strings */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1996,7 +2014,6 @@
 				832B24CF15E49308004FD493 /* da */,
 				832B24D115E4931E004FD493 /* sk */,
 				832B24D215E49326004FD493 /* es-MX */,
-				832B24D315E49332004FD493 /* lv */,
 				832B24D415E4934A004FD493 /* el */,
 				832B24D515E49353004FD493 /* th */,
 				832B24D615E4935C004FD493 /* ru */,
@@ -2009,8 +2026,9 @@
 				832B24DD15E493AB004FD493 /* pl */,
 				832B24DE15E493B3004FD493 /* ko */,
 				832B24DF15E493BC004FD493 /* pt-PT */,
-				BCC042EA15F0F146000E1768 /* pt */,
 				BC8362B915F268070012FBA3 /* ca */,
+				8303BD331770A93200A18593 /* lv_LV */,
+				8303BD341770A94600A18593 /* zh_TW */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
