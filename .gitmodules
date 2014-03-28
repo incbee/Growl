@@ -13,3 +13,6 @@
 [submodule "external_dependencies/shortcutrecorder"]
 	path = external_dependencies/shortcutrecorder
 	url = git://github.com/growl/ShortcutRecorder.git
+[submodule "external_dependencies/tmslidercontrol"]
+	path = external_dependencies/tmslidercontrol
+	url = git://github.com/growl/TMSliderControl.git
